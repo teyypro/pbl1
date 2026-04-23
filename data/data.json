@@ -1,0 +1,6 @@
+{
+	"name":	"Nguyen Van A",
+	"age":	19,
+	"is_student":	true,
+	"scores":	[8, 9, 10]
+}
