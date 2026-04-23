@@ -28,8 +28,7 @@ char* readFileToString(const char *fileName) {
 
 void configUTF8() {
     #ifdef _WIN32
-        SetConsoleOutputCP(65001);
-        SetConsoleCP(65001);
+        system("chcp 65001 > nul");
     #endif
 
 }

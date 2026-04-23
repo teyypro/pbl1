@@ -1,5 +1,5 @@
-#ifndef EXACTLY_SEARCHING_H
-#define EXACTLY_SEARCHING_H
+#ifndef EXACT_SEARCHING_H
+#define EXACT_SEARCHING_H
 #include "../data_structures.h"
 
 #define HASH_TABLE_SIZE 10007
