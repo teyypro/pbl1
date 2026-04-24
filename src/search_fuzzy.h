@@ -1,5 +1,5 @@
-#ifndef FUZZY_SEARCHING_H
-#define FUZZY_SEARCHING_H
+#ifndef SEARCH_FUZZY_H
+#define SEARCH_FUZZY_H
 #include "../data_structures.h"
 #include <wchar.h>
 

@@ -4,9 +4,9 @@
 #ifdef _WIN32
     #include <windows.h>
 #endif
-#include "exact_searching_vocab.h"
-#include "exact_searching_kanji.h"
-#include "fuzzy_searching.h"
+#include "kanji_search_exact.h"
+#include "vocab_search_exact.h"
+#include "search_fuzzy.h"
 #include "parse_json_to_struct.h"
 #include "../data_structures.h"
 #include "menu.h"

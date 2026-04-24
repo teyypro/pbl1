@@ -4,7 +4,7 @@
 #ifdef _WIN32
     #include <windows.h>
 #endif
-#include "exact_searching_kanji.h"
+#include "kanji_search_exact.h"
 #include "../data_structures.h"
 
 HashTableK* createHashTableK(int size) {

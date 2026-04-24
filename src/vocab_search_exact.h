@@ -1,5 +1,5 @@
-#ifndef EXACT_SEARCHING_VOCAB_H
-#define EXACT_SEARCHING_VOCAB_H
+#ifndef vocab_search_exact_H
+#define vocab_search_exact_H
 #include "../data_structures.h"
 
 #define HASH_TABLE_SIZE 10007

@@ -6,7 +6,6 @@
 #endif
 
 #include "parse_json_to_struct.h"
-#include "exact_searching_vocab.h"
 #include "data_structures.h"
 #include "menu.h"
 

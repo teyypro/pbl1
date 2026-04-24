@@ -1,5 +1,5 @@
-#ifndef EXACT_SEARCHING_KANJI_H
-#define EXACT_SEARCHING_KANJI_H
+#ifndef kanji_search_exact_H
+#define kanji_search_exact_H
 #include "../data_structures.h"
 
 #define HASH_TABLE_SIZE 10007
