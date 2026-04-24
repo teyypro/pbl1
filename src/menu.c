@@ -6,6 +6,7 @@
 #endif
 #include "exact_searching_vocab.h"
 #include "exact_searching_kanji.h"
+#include "fuzzy_searching.h"
 #include "parse_json_to_struct.h"
 #include "../data_structures.h"
 #include "menu.h"
@@ -18,18 +19,18 @@ void pauseAndClear() {
 
 
 void displayMenu() {
-    printf("\n================ BẢNG ĐIỀU KHIỂN ================\n");
-    printf("1. Tìm kiếm chính xác\n");
-    printf("2. Tìm kiếm mờ\n");
-    printf("3. Quản lý từ điển cá nhân\n");
-    printf("4. Lọc theo Bài học\n");
-    printf("5. Lọc từ vựng Kanji thông minh\n");
-    printf("6. Phân tích câu\n");
-    printf("7. Trắc nghiệm\n");
-    printf("8. Ôn tập từ sai\n");
-    printf("9. Kanji họ hàng (Bộ thủ)\n");
-    printf("0. Thoát chương trình\n");
-    printf(">>> Nhập lựa chọn (0-9): ");
+    printf("\n======== BẢNG ĐIỀU KHIỂN ========\n");
+    printf("[1]. Tìm kiếm chính xác\n");
+    printf("[2]. Tìm kiếm mờ\n");
+    printf("[3]. Quản lý từ điển cá nhân\n");
+    printf("[4]. Lọc theo Bài học\n");
+    printf("[5]. Lọc từ vựng Kanji thông minh\n");
+    printf("[6]. Phân tích câu\n");
+    printf("[7]. Trắc nghiệm\n");
+    printf("[8]. Ôn tập từ sai\n");
+    printf("[9]. Kanji họ hàng (Bộ thủ)\n");
+    printf("[0]. Thoát chương trình\n");
+    printf(">>> Nhập lựa chọn [0-9]: ");
 }
 
 
@@ -67,9 +68,9 @@ void caseNo1(HashTable *vocabHT, HashTableK *kanjiHT) {
 
     system("cls");
     printf("\n--- CHỌN KIỂU TÌM KIẾM CHÍNH XÁC ---\n");
-    printf("1. Tìm kiếm Kanji (Mặt chữ, Hán Việt)\n");
-    printf("2. Tìm kiếm Từ vựng (Nhật, Furigana, Romaji)\n");
-    printf("Chọn (1-2): ");
+    printf("[1]. Tìm kiếm Kanji (Mặt chữ, Hán Việt)\n");
+    printf("[2]. Tìm kiếm Từ vựng (Nhật, Furigana, Romaji)\n");
+    printf("Chọn [1-2]: ");
 
     
     if (scanf("%d", &searchSubChoice) != 1) {
@@ -96,6 +97,26 @@ void caseNo1(HashTable *vocabHT, HashTableK *kanjiHT) {
     } else {
         printf("Lựa chọn không hợp lệ.\n");
     }
+}
+
+void caseNo2(KanjiList *L) {
+    int choice;
+    char keyword[256];
+
+    system("cls");
+    printf("\n--- TÌM KIẾM MỜ ---\n");
+    printf("[1]. Tìm theo Từ vựng (Kanji)\n");
+    printf("[2]. Tìm theo Phiên Âm (Hiragana)\n");
+    printf("[3]. Tìm theo Cách đọc (Romaji)\n");
+    printf("[4]. Tìm theo Nghĩa (Tiếng Việt)\n");
+    printf("Chọn [1-4]: ");
+    scanf("%d", &choice);
+    getchar(); // Xóa bộ nhớ đệm
+
+    printf("Nhập từ cần tìm: ");
+    inputString(keyword, 256); // Dung ham inputString ban da co
+
+    fuzzySearching(L, keyword, choice);
 }
 
 void handleMenuSelection(char *rawJson) {
@@ -127,7 +148,8 @@ void handleMenuSelection(char *rawJson) {
                 break;
             }
             case 2:
-                printf("Chuc nang 'Tim kiem mo' dang duoc phat trien.\n");
+                caseNo2(&myData);
+                pauseAndClear();
                 break;
             case 3:
                 printf("Chuc nang 'Quan ly tu dien ca nhan' dang duoc phat trien.\n");

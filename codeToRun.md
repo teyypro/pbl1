@@ -1,1 +1,1 @@
-gcc main.c src/parse_json_to_struct.c src/exact_searching_vocab.c src/exact_searching_kanji.c src/menu.c lib/cJSON.c -Ilib -Isrc -o main.exe
+gcc main.c src/parse_json_to_struct.c src/exact_searching_vocab.c src/exact_searching_kanji.c src/fuzzy_searching.c src/menu.c lib/cJSON.c -Ilib -Isrc -o main.exe
