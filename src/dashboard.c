@@ -7,9 +7,10 @@
 #include "kanji_search_exact.h"
 #include "vocab_search_exact.h"
 #include "search_fuzzy.h"
+#include "lessons_management.h"
 #include "parse_json_to_struct.h"
 #include "../data_structures.h"
-#include "menu.h"
+#include "dashboard.h"
 
 void pauseAndClear() {
     printf("\nNhấn phím bất kỳ để quay lại Dashboard...");
@@ -119,6 +120,12 @@ void caseNo2(KanjiList *L) {
     fuzzySearching(L, keyword, choice);
 }
 
+void caseNo3(KanjiList *L) {
+    system("cls");
+    displayAllLessons(L);
+    selectAndDisplayLesson(L);
+}
+
 void handleMenuSelection(char *rawJson) {
     int choice;
 
@@ -133,6 +140,7 @@ void handleMenuSelection(char *rawJson) {
     buildHashTableForKanji(&myData, kanjiHT);
 
     while (1) {
+        system("cls");
         displayMenu();
         if (scanf("%d", &choice) != 1) {
             printf("Vui long nhap so hop le.\n");
@@ -152,7 +160,7 @@ void handleMenuSelection(char *rawJson) {
                 pauseAndClear();
                 break;
             case 3:
-                printf("Chuc nang 'Quan ly tu dien ca nhan' dang duoc phat trien.\n");
+                caseNo3(&myData);
                 break;
             case 4:
                 printf("Chuc nang 'Loc theo Lesson' dang duoc phat trien.\n");
@@ -177,6 +185,7 @@ void handleMenuSelection(char *rawJson) {
                 return;
             default:
                 printf("Lua chon khong hop le. Vui long chon lai.\n");
+                getchar(); // chờ người dùng nhấn phím
         }
     }
 }

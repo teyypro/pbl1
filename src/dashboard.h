@@ -1,5 +1,5 @@
-#ifndef MENU_H
-#define MENU_H
+#ifndef DASHBOARD_H
+#define DASHBOARD_H
 
 
 void displayMenu();
