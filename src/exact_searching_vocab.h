@@ -1,5 +1,5 @@
-#ifndef EXACT_SEARCHING_H
-#define EXACT_SEARCHING_H
+#ifndef EXACT_SEARCHING_VOCAB_H
+#define EXACT_SEARCHING_VOCAB_H
 #include "../data_structures.h"
 
 #define HASH_TABLE_SIZE 10007
@@ -21,7 +21,7 @@ typedef struct HashTableForVocab HashTable;
 
 HashTable* createHashTable(int size);
 HashNode* createHashNode(char *key, Vocab* vocab);
-int hashGetIndex(char *str, int tableSize);
+static int hashGetIndex(char *str, int tableSize);
 void insertVocabToHT(HashTable *ht, char *key, Vocab *vocab);
 void buildHashTableForVocab(KanjiList *L, HashTable *ht);
 void printOutVocab(Vocab *v);

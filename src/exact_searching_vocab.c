@@ -4,7 +4,7 @@
 #ifdef _WIN32
     #include <windows.h>
 #endif
-#include "exact_searching.h"
+#include "exact_searching_vocab.h"
 #include "../data_structures.h"
 
 HashTable* createHashTable(int size) {
@@ -58,6 +58,7 @@ void buildHashTableForVocab(KanjiList *L, HashTable *ht) {
 			insertVocabToHT(ht, v->vocab, v);
 			insertVocabToHT(ht, v->romaji, v);
 			insertVocabToHT(ht, v->hiragana, v);
+			insertVocabToHT(ht, v->meaning, v);
 		}
 	}
 }
@@ -65,21 +66,19 @@ void buildHashTableForVocab(KanjiList *L, HashTable *ht) {
 
 void printOutVocab(Vocab *v) {
     if (v == NULL) return;
-
-    printf("-----------------------------------\n");
-    printf("Vocab:    %s\n", v->vocab ? v->vocab : "N/A");
-    printf("Hiragana: %s\n", v->hiragana ? v->hiragana : "N/A");
-    printf("Romaji:   %s\n", v->romaji ? v->romaji : "N/A");
-    printf("Meaning:  %s\n", v->meaning ? v->meaning : "N/A");
-
+    printf(" >> %s [%s - %s]: ", 
+           v->vocab ? v->vocab : "N/A", 
+           v->hiragana ? v->hiragana : "N/A", 
+           v->romaji ? v->romaji : "N/A");
+    printf("%s\n", v->meaning ? v->meaning : "N/A");
     if (v->samplesCount > 0 && v->samples != NULL) {
-        printf("Samples:\n");
         for (int i = 0; i < v->samplesCount; i++) {
-            printf("  %d. JP: %s\n", i + 1, v->samples[i].jp ? v->samples[i].jp : "N/A");
-            printf("     VN: %s\n", v->samples[i].vn ? v->samples[i].vn : "N/A");
+            printf("    (%d) %s: %s\n", 
+                   i + 1, 
+                   v->samples[i].jp ? v->samples[i].jp : "", 
+                   v->samples[i].vn ? v->samples[i].vn : "");
         }
     }
-    printf("-----------------------------------\n");
 }
 
 void exactlySearching(HashTable *ht, char *key) {
