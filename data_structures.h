@@ -35,6 +35,7 @@ struct YomiInfo {
 struct KanjiInfo {
     int stt;
     char *kanji;
+    wchar_t *kanji_w;
     char *hanViet;
     char *radical;
     char *stroke;

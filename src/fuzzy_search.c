@@ -53,14 +53,13 @@ void printFuzzyResult(int gap, Vocab *v) {
         sprintf(gapStr, "%d", gap);
     }
 
-
- 
-    printf("%-7s \t %-15.15s \t %-15.15s \t %-15.15s \t %-30.30s\n", 
+    printf("%-7s %-20s %-20s %-20s %-30s\n", 
         gapStr, 
         v->vocab, 
         v->hiragana, 
         v->romaji, 
         v->meaning);
+
 
 }
 

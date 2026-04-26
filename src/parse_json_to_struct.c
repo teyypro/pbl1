@@ -145,6 +145,7 @@ KanjiList parseJsonToStruct(const char *jsonString) {
         k->on    = parseYomi(cJSON_GetObjectItem(item, "on"),    &k->onCount);
         k->kun   = parseYomi(cJSON_GetObjectItem(item, "kun"),   &k->kunCount);
         k->vocabs= parseVocabs(cJSON_GetObjectItem(item, "vocabs"), &k->vocabsCount);
+        k->kanji_w = convertToWchar(k->kanji);
     }
 
     cJSON_Delete(root);
