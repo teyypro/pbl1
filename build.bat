@@ -9,6 +9,7 @@ gcc main.c ^
     src/lessons_management.c ^
     src/multiple_choice.c ^
     src/filter_learned_lesson.c ^
+    src/utils.c ^
     src/dashboard.c ^
     lib/cJSON.c ^
     -Ilib -Isrc -o main.exe

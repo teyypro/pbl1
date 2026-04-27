@@ -5,6 +5,7 @@
 #ifdef _WIN32
     #include <windows.h>
 #endif
+#include "utils.h"
 #include "../data_structures.h"
 #define MAX_GAP 2
 
@@ -64,8 +65,7 @@ void printFuzzyResult(int gap, Vocab *v) {
 }
 
 void fuzzySearching(KanjiList *L, char *inputUTF8, int option) {
-    wchar_t wInput[256];
-    mbstowcs(wInput, inputUTF8, 256);
+    wchar_t *wInput = convertToWchar(inputUTF8);
     int foundCount = 0;
     int i, j;
     int gap;

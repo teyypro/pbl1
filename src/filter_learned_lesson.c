@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 
 #ifdef _WIN32
     #include <windows.h>
@@ -11,86 +12,80 @@
 
 #define KANJI_PER_LESSON 16
 
-/* Thay thế bool bằng int (1 là true, 0 là false) */
+/* ====================== HÀM HỖ TRỢ wchar_t ====================== */
 
-int isKanaUTF8(const char* utf8_char) {
-    static const char* kana_list[] = {
-       "あ", "い", "う", "え", "お", "か", "き", "く", "け", "こ",
-        "さ", "し", "す", "せ", "そ", "た", "ち", "つ", "て", "と",
-        "な", "に", "ぬ", "ね", "の", "は", "ひ", "ふ", "へ", "ほ",
-        "ま", "み", "む", "め", "も", "や", "ゆ", "よ", "ら", "り",
-        "る", "れ", "ろ", "わ", "を", "ん", "が", "ぎ", "ぐ", "げ",
-        "ご", "ざ", "じ", "ず", "ぜ", "ぞ", "だ", "ぢ", "づ", "で",
-        "ど", "ば", "び", "ぶ", "べ", "ぼ", "ぱ", "ぴ", "ぷ", "ぺ",
-        "ぽ", "ゃ", "ゅ", "ょ", "っ", "ア", "イ", "ウ", "エ", "オ",
-        "カ", "キ", "ク", "ケ", "コ", "サ", "シ", "ス", "セ", "ソ",
-        "タ", "チ", "ツ", "テ", "ト", "ナ", "ニ", "ヌ", "ネ", "ノ",
-        "ハ", "ヒ", "フ", "ヘ", "ホ", "マ", "ミ", "ム", "メ", "モ",
-        "ヤ", "ユ", "ヨ", "ラ", "リ", "ル", "レ", "ロ", "ワ", "ヲ",
-        "ン", "ガ", "ギ", "グ", "ゲ", "ゴ", "ザ", "ジ", "ズ", "ゼ",
-        "ゾ", "ダ", "ヂ", "ヅ", "デ", "ド", "バ", "ビ", "ブ", "ベ",
-        "ボ", "パ", "ピ", "プ", "ペ", "ポ", "ャ", "ュ", "ョ", "ッ",
-        NULL
-    };
-    int i;
-    for (i = 0; kana_list[i] != NULL; i++) {
-        if (strcmp(utf8_char, kana_list[i]) == 0) return 1;
+int isKanjiWChar(wchar_t wc)
+{
+    return (wc >= 0x4E00 && wc <= 0x9FFF) ||   /* Kanji thông dụng */
+           (wc >= 0x3400 && wc <= 0x4DBF);
+}
+
+int isInWArray(const wchar_t* target, wchar_t** array, int count)
+{
+    for (int i = 0; i < count; i++) {
+        if (wcscmp(target, array[i]) == 0)
+            return 1;
     }
     return 0;
 }
 
-int getUTF8Char(const char* str, char* output) {
-    if (!str || !*str) return 0;
-    unsigned char c = (unsigned char)str[0];
-    int len = (c < 0x80) ? 1 : ((c & 0xE0) == 0xC0) ? 2 : ((c & 0xF0) == 0xE0) ? 3 : 4;
-    
-    int i;
-    for (i = 0; i < len && str[i]; i++) output[i] = str[i];
-    output[len] = '\0';
-    return len;
-}
 
-/* Kiểm tra nhanh một chuỗi có nằm trong danh sách không */
-int isInArray(const char* target, char** array, int count) {
-    int i;
-    for (i = 0; i < count; i++) {
-        if (strcmp(target, array[i]) == 0) return 1;
+/* ====================== HÀM CHÍNH ====================== */
+void runFilterLearnedVocab(KanjiList *allData)
+{
+
+    if (!allData || allData->kanjiCount == 0) {
+        printf("Khong co du lieu.\n");
+        return;
     }
-    return 0;
-}
 
-void runFilterLearnedVocab(KanjiList *allData) {
-#ifdef _WIN32
-    SetConsoleOutputCP(CP_UTF8);
-#endif
+    int selected[50] = {0};
+    int n = 0, input, maxLesson = 0;
 
-    if (!allData || allData->kanjiCount == 0) return;
-
-    int selected[50], n = 0, input, maxLesson = 0;
     printf("Nhap cac bai can review (ket thuc bang 0): ");
-    while (scanf("%d", &input) && input != 0 && n < 50) {
+    while (scanf("%d", &input) == 1 && input != 0 && n < 50) {
         selected[n++] = input;
         if (input > maxLesson) maxLesson = input;
     }
 
-    /* Bước 1 & 2: Thu thập Kanji mục tiêu và Kanji đã biết */
-    int limit = maxLesson * KANJI_PER_LESSON;
-    char** learnedKanji = malloc(limit * sizeof(char*));
-    char** targetKanji = malloc(limit * sizeof(char*));
+    if (n == 0) {
+        printf("Khong co bai nao duoc chon.\n");
+        return;
+    }
+
+
+    int limit = maxLesson * KANJI_PER_LESSON + 10;
+
+    wchar_t** learnedKanji = (wchar_t**)malloc(limit * sizeof(wchar_t*));
+    wchar_t** targetKanji  = (wchar_t**)malloc(limit * sizeof(wchar_t*));
+
+    if (!learnedKanji || !targetKanji) {
+        printf("Loi cap phat bo nho!\n");
+        free(learnedKanji);
+        free(targetKanji);
+        return;
+    }
+
     int learnedCount = 0, targetCount = 0;
 
-    int i, j, k;
-    for (i = 1; i <= maxLesson; i++) {
-        int start = (i - 1) * KANJI_PER_LESSON;
-        for (j = start; j < start + KANJI_PER_LESSON && j < allData->kanjiCount; j++) {
-            char* kStr = allData->kanjis[j].kanji;
-            
-            // Thêm vào danh sách "đã học"
+    /* Thu thập kanji đã học và kanji mục tiêu (dùng wchar_t) */
+    for (int lesson = 1; lesson <= maxLesson; lesson++) {
+        int start = (lesson - 1) * KANJI_PER_LESSON;
+        int end = start + KANJI_PER_LESSON;
+        if (end > allData->kanjiCount) end = allData->kanjiCount;
+
+        for (int j = start; j < end; j++) {
+            char* k8 = allData->kanjis[j].kanji;           // UTF-8
+            if (!k8) continue;
+
+            //wchar_t* kStr = utf8_to_wchar_temp(k8);
+            wchar_t* kStr = allData->kanjis[j].kanji_w;
+            if (!kStr) continue;
+
             learnedKanji[learnedCount++] = kStr;
 
-            // Nếu thuộc bài được chọn, thêm vào danh sách "mục tiêu"
-            for (k = 0; k < n; k++) {
-                if (selected[k] == i) {
+            for (int k = 0; k < n; k++) {
+                if (selected[k] == lesson) {
                     targetKanji[targetCount++] = kStr;
                     break;
                 }
@@ -98,34 +93,62 @@ void runFilterLearnedVocab(KanjiList *allData) {
         }
     }
 
-    /* Bước 3: Lọc từ vựng */
-    printf("\n--- KET QUA LOC ---\n");
-    for (i = 0; i < learnedCount; i++) {
-        Kanji *kj = &allData->kanjis[i];
-        for (j = 0; j < kj->vocabsCount; j++) {
-            Vocab *v = &kj->vocabs[j];
-            const char* ptr = v->vocab;
-            int hasTarget = 0, allKnown = 1;
 
-            while (*ptr) {
-                char utf8[5];
-                int len = getUTF8Char(ptr, utf8);
-                if (!isKanaUTF8(utf8) && (unsigned char)utf8[0] >= 0x80) {
-                    if (isInArray(utf8, targetKanji, targetCount)) hasTarget = 1;
-                    if (!isInArray(utf8, learnedKanji, learnedCount)) {
+    int foundVocabs = 0;
+    int maxVocab = maxLesson * KANJI_PER_LESSON;
+    /* Duyệt tất cả từ vựng */
+    for (int i = 0; i < maxVocab; i++) {
+        Kanji *kj = &allData->kanjis[i];
+        
+        for (int j = 0; j < kj->vocabsCount; j++) {
+            Vocab *v = &kj->vocabs[j];
+            if (!v->vocab || !v->vocab_w) continue;  // Kiểm tra cả hai
+            
+            const wchar_t* ptr = v->vocab_w;
+            int hasTarget = 0;
+            int allKnown = 1;
+            
+            for (int k = 0; ptr[k] != L'\0'; k++) {  // Dùng for thay vì while
+                wchar_t wc = ptr[k];
+                
+                if (isKanjiWChar(wc)) {
+                    wchar_t single[2] = {wc, L'\0'};
+                    
+                    if (isInWArray(single, targetKanji, targetCount)) {
+                        hasTarget = 1;
+                    }
+                    
+                    if (!isInWArray(single, learnedKanji, learnedCount)) {
                         allKnown = 0;
                         break;
                     }
                 }
-                ptr += len;
             }
-
+            
             if (hasTarget && allKnown) {
-                printf("- %s (%s): %s\n", v->vocab, v->hiragana, v->meaning);
+                foundVocabs++;
+                printf("%d. %s (%s - %s): %s\n",
+                    foundVocabs,
+                    v->vocab,
+                    v->hiragana,
+                    v->romaji,
+                    v->meaning);
+                
             }
         }
     }
-    getchar();
+
+    if (foundVocabs == 0) {
+        printf("Khong tim thay tu vung nao thoa man dieu kien.\n");
+    } else {
+        printf("\nTong so tu vung tim duoc: %d\n", foundVocabs);
+    }
+
+    /* Giải phóng tất cả wchar_t tạm */
+    for (int i = 0; i < learnedCount; i++) free(learnedKanji[i]);
     free(learnedKanji);
     free(targetKanji);
+
+    printf("\nNhan Enter de tiep tuc...");
+    getchar();
 }

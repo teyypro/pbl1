@@ -6,6 +6,7 @@
     #include <windows.h>
 #endif
 #include "parse_json_to_struct.h"
+#include "utils.h"
 #include "../lib/cJSON.h"
 #include "../data_structures.h"
 
@@ -30,6 +31,7 @@ char* readFileToString(const char *fileName) {
 void configUTF8() {
     #ifdef _WIN32
         system("chcp 65001 > nul");
+        
     #endif
 
 }
@@ -77,19 +79,7 @@ Sample* parseSamples(cJSON *samplesArr, int *count) {
     return samples;
 }
 
-// Hàm bổ trợ để chuyển đổi UTF-8 sang wchar_t
-wchar_t* convertToWchar(const char *source) {
-    if (!source) return NULL;
-    // Bước 1: Tính độ dài cần thiết cho chuỗi wchar_t
-    size_t w_len = mbstowcs(NULL, source, 0);
-    if (w_len == (size_t)-1) return NULL; // Lỗi encoding
-    // Bước 2: Cấp phát bộ nhớ (w_len + 1 cho ký tự kết thúc L'\0')
-    wchar_t *w_str = malloc((w_len + 1) * sizeof(wchar_t));
-    if (!w_str) return NULL;
-    // Bước 3: Thực hiện chuyển đổi thực sự
-    mbstowcs(w_str, source, w_len + 1);
-    return w_str;
-}
+
 
 Vocab* parseVocabs(cJSON *vocabsArr, int *count) {
     if (!vocabsArr || !cJSON_IsArray(vocabsArr)) {
