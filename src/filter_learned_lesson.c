@@ -9,84 +9,124 @@
 
 #include "../data_structures.h"
 #include "filter_learned_lesson.h"
+#include "utils.h"
 
 #define KANJI_PER_LESSON 16
+#define HASH_SIZE        256
 
-/* ====================== HÀM HỖ TRỢ wchar_t ====================== */
 
-int isKanjiWChar(wchar_t wc)
-{
-    return (wc >= 0x4E00 && wc <= 0x9FFF) ||   /* Kanji thông dụng */
-           (wc >= 0x3400 && wc <= 0x4DBF);
+typedef struct HashNode {
+    wchar_t* kanji;
+    struct HashNode* next;
+} HashNode;
+
+typedef struct {
+    HashNode* buckets[HASH_SIZE];
+} LearnedHashSet;
+
+unsigned int hashKanji(const wchar_t* str) {
+    unsigned int hash = 5381;
+    while (*str) {
+        hash = ((hash << 5) + hash) + *str++;
+    }
+    return hash % HASH_SIZE;
 }
 
-int isInWArray(const wchar_t* target, wchar_t** array, int count)
-{
-    for (int i = 0; i < count; i++) {
-        if (wcscmp(target, array[i]) == 0)
+LearnedHashSet* createLearnedHashSet() {
+    return (LearnedHashSet*)calloc(1, sizeof(LearnedHashSet));
+}
+
+void addLearnedKanji(LearnedHashSet* set, wchar_t* kanji) {
+    if (!set || !kanji) return;
+
+    unsigned int idx = hashKanji(kanji);
+    HashNode* node = (HashNode*)malloc(sizeof(HashNode));
+    
+    node->kanji = kanji;
+    node->next = set->buckets[idx];
+    set->buckets[idx] = node;
+}
+
+int containsLearnedKanji(LearnedHashSet* set, const wchar_t* kanji) {
+    if (!set || !kanji) return 0;
+
+    unsigned int idx = hashKanji(kanji);
+    HashNode* curr = set->buckets[idx];
+
+    while (curr) {
+        if (wcscmp(curr->kanji, kanji) == 0)
             return 1;
+        curr = curr->next;
     }
     return 0;
 }
 
-
-/* ====================== HÀM CHÍNH ====================== */
-void runFilterLearnedVocab(KanjiList *allData)
+void freeLearnedHashSet(LearnedHashSet* set)
 {
+    if (!set) return;
+    for (int i = 0; i < HASH_SIZE; i++) {
+        HashNode* curr = set->buckets[i];
+        while (curr) {
+            HashNode* temp = curr;
+            curr = curr->next;
+            free(temp);
+        }
+    }
+    free(set);
+}
+
+void runFilterLearnedVocab(KanjiList *allData) {
 
     if (!allData || allData->kanjiCount == 0) {
         printf("Khong co du lieu.\n");
         return;
     }
 
+    /* Nhập các bài muốn review */
     int selected[50] = {0};
-    int n = 0, input, maxLesson = 0;
+    int numSelected = 0, input, maxLesson = 0;
 
     printf("Nhap cac bai can review (ket thuc bang 0): ");
-    while (scanf("%d", &input) == 1 && input != 0 && n < 50) {
-        selected[n++] = input;
+    while (scanf("%d", &input) == 1 && input != 0 && numSelected < 50) {
+        selected[numSelected++] = input;
         if (input > maxLesson) maxLesson = input;
     }
 
-    if (n == 0) {
+    if (numSelected == 0) {
         printf("Khong co bai nao duoc chon.\n");
         return;
     }
 
+    /* Khởi tạo cấu trúc dữ liệu */
+    wchar_t** targetKanjiList = malloc((maxLesson * KANJI_PER_LESSON + 10) * sizeof(wchar_t*));
+    LearnedHashSet* learnedHash = createLearnedHashSet();
 
-    int limit = maxLesson * KANJI_PER_LESSON + 10;
-
-    wchar_t** learnedKanji = (wchar_t**)malloc(limit * sizeof(wchar_t*));
-    wchar_t** targetKanji  = (wchar_t**)malloc(limit * sizeof(wchar_t*));
-
-    if (!learnedKanji || !targetKanji) {
+    if (!targetKanjiList || !learnedHash) {
         printf("Loi cap phat bo nho!\n");
-        free(learnedKanji);
-        free(targetKanji);
+        free(targetKanjiList);
+        freeLearnedHashSet(learnedHash);
         return;
     }
 
-    int learnedCount = 0, targetCount = 0;
+    int targetCount = 0;
 
-    /* Thu thập kanji đã học và kanji mục tiêu (dùng wchar_t) */
+    /* Thu thập learnedKanji (vào HashSet) và targetKanji (vào mảng) */
     for (int lesson = 1; lesson <= maxLesson; lesson++) {
         int start = (lesson - 1) * KANJI_PER_LESSON;
-        int end = start + KANJI_PER_LESSON;
+        int end   = start + KANJI_PER_LESSON;
         if (end > allData->kanjiCount) end = allData->kanjiCount;
 
         for (int j = start; j < end; j++) {
-            char* k8 = allData->kanjis[j].kanji;           // UTF-8
-            if (!k8) continue;
+            wchar_t* kanjiW = allData->kanjis[j].kanji_w;
+            if (!kanjiW) continue;
 
-            //wchar_t* kStr = utf8_to_wchar_temp(k8);
-            wchar_t* kStr = allData->kanjis[j].kanji_w;
-            if (!kStr) continue;
+            /* Thêm vào danh sách đã học (hash set) */
+            addLearnedKanji(learnedHash, kanjiW);
 
-            learnedKanji[learnedCount++] = kStr;
-
-            for (int k = 0; k < n; k++) {
+            /* Nếu bài này được chọn → thêm vào danh sách mục tiêu targetKanjiList*/
+            for (int k = 0; k < numSelected; k++) {
                 if (selected[k] == lesson) {
-                    targetKanji[targetCount++] = kStr;
+                    targetKanjiList[targetCount++] = kanjiW;
                     break;
                 }
             }
@@ -94,61 +134,68 @@ void runFilterLearnedVocab(KanjiList *allData)
     }
 
 
-    int foundVocabs = 0;
-    int maxVocab = maxLesson * KANJI_PER_LESSON;
-    /* Duyệt tất cả từ vựng */
-    for (int i = 0; i < maxVocab; i++) {
-        Kanji *kj = &allData->kanjis[i];
-        
-        for (int j = 0; j < kj->vocabsCount; j++) {
-            Vocab *v = &kj->vocabs[j];
-            if (!v->vocab || !v->vocab_w) continue;  // Kiểm tra cả hai
-            
-            const wchar_t* ptr = v->vocab_w;
-            int hasTarget = 0;
-            int allKnown = 1;
-            
-            for (int k = 0; ptr[k] != L'\0'; k++) {  // Dùng for thay vì while
-                wchar_t wc = ptr[k];
-                
-                if (isKanjiWChar(wc)) {
-                    wchar_t single[2] = {wc, L'\0'};
-                    
-                    if (isInWArray(single, targetKanji, targetCount)) {
-                        hasTarget = 1;
+    int foundCount = 0;
+    int maxToCheck = (maxLesson * KANJI_PER_LESSON < allData->kanjiCount) 
+                     ? maxLesson * KANJI_PER_LESSON 
+                     : allData->kanjiCount;
+
+    /* Duyệt qua các từ vựng */
+    for (int i = 0; i < maxToCheck; i++) {
+        Kanji *kanjiEntry = &allData->kanjis[i];
+
+        for (int v = 0; v < kanjiEntry->vocabsCount; v++) {
+            Vocab *vocab = &kanjiEntry->vocabs[v];
+            if (!vocab->vocab || !vocab->vocab_w) continue;
+
+            const wchar_t* text = vocab->vocab_w;
+            int hasTargetKanji = 0;
+            int allKanjiKnown = 1;
+
+            /* Duyệt từng ký tự trong từ vựng */
+            for (int pos = 0; text[pos] != L'\0'; pos++) {
+                wchar_t ch = text[pos];
+
+                if (isKanjiWChar(ch)) {
+                    wchar_t singleKanji[2] = {ch, L'\0'};
+
+                    /* Kiểm tra Kanji này có chứa Kanji mục tiêu (thuộc các lessons đã chọn) không, duyệt for cơ bản */
+                    if (!hasTargetKanji) {
+                        for (int t = 0; t < targetCount; t++) {
+                            if (wcscmp(singleKanji, targetKanjiList[t]) == 0) {
+                                hasTargetKanji = 1;
+                                break;
+                            }
+                        }
                     }
-                    
-                    if (!isInWArray(single, learnedKanji, learnedCount)) {
-                        allKnown = 0;
+
+                    /* Kiểm tra Kanji này đã học chưa (dùng HashSet) */
+                    if (!containsLearnedKanji(learnedHash, singleKanji)) {
+                        allKanjiKnown = 0;
                         break;
                     }
                 }
             }
-            
-            if (hasTarget && allKnown) {
-                foundVocabs++;
+
+            if (hasTargetKanji && allKanjiKnown) {
+                foundCount++;
                 printf("%d. %s (%s - %s): %s\n",
-                    foundVocabs,
-                    v->vocab,
-                    v->hiragana,
-                    v->romaji,
-                    v->meaning);
-                
+                       foundCount,
+                       vocab->vocab,
+                       vocab->hiragana ? vocab->hiragana : "-",
+                       vocab->romaji   ? vocab->romaji   : "-",
+                       vocab->meaning);
             }
         }
     }
 
-    if (foundVocabs == 0) {
-        printf("Khong tim thay tu vung nao thoa man dieu kien.\n");
+    if (foundCount == 0) {
+        printf("\nKhong tim thay tu vung nao thoa man dieu kien.\n");
     } else {
-        printf("\nTong so tu vung tim duoc: %d\n", foundVocabs);
+        printf("\nTong so tu vung tim duoc: %d\n", foundCount);
     }
 
-    /* Giải phóng tất cả wchar_t tạm */
-    for (int i = 0; i < learnedCount; i++) free(learnedKanji[i]);
-    free(learnedKanji);
-    free(targetKanji);
+    /* Giải phóng bộ nhớ */
+    freeLearnedHashSet(learnedHash);
+    free(targetKanjiList);
 
-    printf("\nNhan Enter de tiep tuc...");
-    getchar();
 }

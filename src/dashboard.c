@@ -11,7 +11,9 @@
 #include "multiple_choice.h"
 #include "lessons_management.h"
 #include "filter_learned_lesson.h"
+#include "sentence_analysis.h"
 #include "parse_json_to_struct.h"
+#include "utils.h"
 #include "../data_structures.h"
 #include "dashboard.h"
 
@@ -27,43 +29,15 @@ void displayMenu() {
     printf("[1]. Tìm kiếm từ điển (Chính xác / KMP / Tìm mờ)\n");
     printf("[2]. Quản lý từ điển cá nhân\n");
     printf("[3]. Lọc từ vựng đã học\n");
-    printf("[4]. Lọc từ vựng Kanji thông minh\n");
-    printf("[5]. Phân tích câu\n");
-    printf("[6]. Trắc nghiệm\n");
-    printf("[7]. Ôn tập từ sai\n");
-    printf("[8]. Kanji họ hàng (Bộ thủ)\n");
+    printf("[4]. Phân tích câu\n");
+    printf("[5]. Bài tập\n");
+    printf("[6]. Ôn tập từ sai\n");
+    printf("[7]. Kanji họ hàng (Bộ thủ)\n");
     printf("[0]. Thoát chương trình\n");
-    printf(">>> Nhập lựa chọn [0-8]: ");
+    printf(">>> Nhập lựa chọn [0-7]: ");
 }
 
 
-void inputString(char *buffer, int maxLength) {
-    // Xóa bộ đệm trôi từ các lệnh scanf trước đó
-    fflush(stdin);
-
-    #ifdef _WIN32
-        // Sử dụng WinAPI để đọc Unicode (UTF-16)
-        wchar_t *wBuf = malloc(maxLength * sizeof(wchar_t));
-        DWORD read;
-        HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
-
-        if (ReadConsoleW(hStdin, wBuf, maxLength - 1, &read, NULL)) {
-            // Xử lý ký tự xuống dòng tùy theo Terminal (Windows Terminal/CMD/PowerShell)
-            if (read >= 2 && wBuf[read - 2] == L'\r') wBuf[read - 2] = L'\0';
-            else if (read >= 1 && wBuf[read - 1] == L'\n') wBuf[read - 1] = L'\0';
-            else wBuf[read] = L'\0';
-
-            // Chuyển đổi sang UTF-8 để trả về buffer
-            WideCharToMultiByte(CP_UTF8, 0, wBuf, -1, buffer, maxLength, NULL, NULL);
-        }
-        free(wBuf);
-    #else
-        // Dành cho Linux hoặc macOS (mặc định đã là UTF-8)
-        if (fgets(buffer, maxLength, stdin)) {
-            buffer[strcspn(buffer, "\n")] = 0;
-        }
-    #endif
-}
 
 
 // --- MENU CẤP 2: TÌM KIẾM CHÍNH XÁC (EXACT SEARCH) ---
@@ -173,8 +147,12 @@ void caseNo3(KanjiList *L) {
     runFilterLearnedVocab(L);
 }
 
-void caseNo6(KanjiList *L) {
+void caseNo5(KanjiList *L) {
     runChoiceOption(L);
+}
+
+void caseNo4(KanjiList *L) {
+    analyzeJapaneseSentence(L);
 }
 
 void handleMenuSelection(char *rawJson) {
@@ -214,21 +192,19 @@ void handleMenuSelection(char *rawJson) {
                 pauseAndClear();
                 break;
             case 4:
-                printf("Chuc nang 'Loc theo Lesson' dang duoc phat trien.\n");
+                caseNo4(&myData);
+                pauseAndClear();
                 break;
             case 5:
-                printf("Chuc nang 'Loc tu vung Kanji thong minh' dang duoc phat trien.\n");
+                caseNo5(&myData); //bai tap
                 break;
             case 6:
-                caseNo6(&myData); //bai tap
-                break;
-            case 7:
                 printf("Chuc nang 'Trac nghiem' dang duoc phat trien.\n");
                 break;
-            case 8:
+            case 7:
                 printf("Chuc nang 'On tap tu sai' dang duoc phat trien.\n");
                 break;
-            case 9:
+            case 8:
                 printf("Chuc nang 'Kanji ho hang' dang duoc phat trien.\n");
                 break;
             case 0:
