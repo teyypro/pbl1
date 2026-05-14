@@ -16,123 +16,236 @@
 #include "utils.h"
 #include "../data_structures.h"
 #include "dashboard.h"
-
+// --- Định nghĩa Bảng màu (Đã được phối lại hài hòa hơn)
+#define CL_LOGO      "\x1b[38;5;208m" // Màu cam đậm (Thương hiệu)
+#define CL_BORDER    "\x1b[38;5;239m" // Màu xám tối (Giảm chói, tôn nội dung)
+#define CL_TEXT      "\x1b[38;5;253m" // Trắng xám
+#define CL_KEY       "\x1b[38;5;111m" // Xanh lơ dịu (Soft Blue)
+#define CL_HIGHLIGHT "\x1b[48;5;236m\x1b[38;5;208m" // Nền xám đậm, chữ cam (Đồng bộ logo)
+#define RESET        "\x1b[0m"
+#define BOLD         "\x1b[1m"
 void pauseAndClear() {
-    printf("\nNhấn phím bất kỳ để quay lại Dashboard...");
-    getchar(); // chờ người dùng nhấn phím
-    system("cls");   // Windows
+    printf("\n\n  " CL_BORDER "────────────────────────────────────────────────────────────" RESET);
+    printf("\n  " BOLD "  [!] " RESET "Hệ thống đã sẵn sàng. Nhấn " CL_HIGHLIGHT " Enter " RESET " để tiếp tục...");
+    getchar();
+    printf("\x1b[2J\x1b[H"); // Dùng ANSI clear screen mượt hơn system("cls")
 }
-
-
 void displayMenu() {
-    printf("\n======== BẢNG ĐIỀU KHIỂN ========\n");
-    printf("[1]. Tìm kiếm từ điển (Chính xác / KMP / Tìm mờ)\n");
-    printf("[2]. Quản lý từ điển cá nhân\n");
-    printf("[3]. Lọc từ vựng đã học\n");
-    printf("[4]. Phân tích câu\n");
-    printf("[5]. Bài tập\n");
-    printf("[6]. Ôn tập từ sai\n");
-    printf("[7]. Kanji họ hàng (Bộ thủ)\n");
-    printf("[0]. Thoát chương trình\n");
-    printf(">>> Nhập lựa chọn [0-7]: ");
+    // 1. ASCII ART LOGO - Căn chỉnh lại padding cho cân đối
+    printf(CL_LOGO BOLD);
+    printf("    _  _              _ _   __ _      \n");
+    printf("   | |/ /            (|) | _ \\(_)     \n");
+    printf("   | ' <  _ _ _ _  _ _   |  _/ | |     \n");
+    printf("   | |\\_\\/ ` | ' \\| | |  |_|   |_|     \n");
+    printf("   |_| \\_\\__,_|_| |_| |_|" RESET "  Dictionary " CL_LOGO "v3.0\n" RESET);
+    printf(CL_LOGO "                   |__/                  \n\n" RESET);
+
+    // 2. MAIN INTERFACE (Khung được fix cứng 60 cột bên trong)
+    printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
+    
+    // Header giả lập tab đang chọn
+    printf(CL_BORDER "  │" RESET CL_HIGHLIGHT " DASHBOARD " RESET CL_TEXT "  History    Favorites    Settings    Help      " CL_BORDER "│\n" RESET);
+    printf(CL_BORDER "  ├──────┬─────────────────────────────────────────────────────┤\n" RESET);
+
+    // Nội dung Menu kèm Icon (Padding đã được tính toán chính xác để thẳng hàng)
+    printf(CL_BORDER "  │ " RESET BOLD "MENU" CL_BORDER " │" RESET "                                                     " CL_BORDER "│\n" RESET);
+    printf(CL_BORDER "  │  " CL_KEY "01" CL_BORDER "  │" RESET " 🔍 Tìm kiếm (Chính xác / KMP / Tìm mờ)              " CL_BORDER "│\n" RESET);
+    printf(CL_BORDER "  │  " CL_KEY "02" CL_BORDER "  │" RESET " 📁 Quản lý từ điển cá nhân                           " CL_BORDER "│\n" RESET);
+    printf(CL_BORDER "  │  " CL_KEY "03" CL_BORDER "  │" RESET " 📑 Lọc từ vựng đã học                                " CL_BORDER "│\n" RESET);
+    printf(CL_BORDER "  │  " CL_KEY "04" CL_BORDER "  │" RESET " 🧠 Phân tích câu (Parser)                            " CL_BORDER "│\n" RESET);
+    printf(CL_BORDER "  │  " CL_KEY "05" CL_BORDER "  │" RESET " 📝 Bài tập hàng ngày                                 " CL_BORDER "│\n" RESET);
+    printf(CL_BORDER "  │  " CL_KEY "06" CL_BORDER "  │" RESET " 🔄 Ôn tập từ sai                                     " CL_BORDER "│\n" RESET);
+    printf(CL_BORDER "  │  " CL_KEY "07" CL_BORDER "  │" RESET " ⛩️  Kanji họ hàng (Bộ thủ)                          " CL_BORDER "│\n" RESET);
+    printf(CL_BORDER "  ├──────┴─────────────────────────────────────────────────────┤\n" RESET);
+    
+    // Nút thoát nổi bật
+    printf(CL_BORDER "  │" RESET "      " BOLD "\x1b[31m[0] THOÁT CHƯƠNG TRÌNH\x1b[0m" RESET "                                " CL_BORDER "│\n" RESET);
+    printf(CL_BORDER "  └────────────────────────────────────────────────────────────┘\n" RESET);
+
+    // 3. FOOTER - Thanh trạng thái
+    printf("  " "\x1b[48;5;236m" CL_BORDER " Shortcut: " RESET " " CL_KEY "1-7: Chọn" RESET " | " CL_KEY "0: Thoát" RESET " | " CL_KEY "F1: Trợ giúp" RESET "\n");
+    
+    // Prompt nhập liệu
+    printf("\n  " BOLD "Command" RESET " » " CL_LOGO);
 }
-
-
-
-
 // --- MENU CẤP 2: TÌM KIẾM CHÍNH XÁC (EXACT SEARCH) ---
 void menuExactSearch(HashTable *vocabHT, HashTableK *kanjiHT) {
     int choice;
     char keyword[256];
-    system("cls");
-    printf("\n==== TÌM KIẾM CHÍNH XÁC ====\n");
-    printf("[1]. Tra cứu Kanji (Mặt chữ/Hán Việt)\n");
-    printf("[2]. Tra cứu Từ vựng (Nhật/Hiragana/Romaji/Tiếng Việt)\n");
-    printf("[0]. Quay lại\n");
-    printf("Chọn: ");
-    scanf("%d", &choice); getchar();
-
-    if (choice == 0) return;
-    printf("Nhập từ khóa chính xác: ");
-    inputString(keyword, 256);
-
-    system("cls");
-    printf("Kết quả tìm kiếm cho: %s\n", keyword);
-    if (choice == 1) exactlySearchingKanji(kanjiHT, keyword);
-    else if (choice == 2) exactlySearching(vocabHT, keyword);
-    
-    printf("\n-------------------------------------------\n");
+    while (1) {
+        printf("\x1b[2J\x1b[H"); // Clear screen mượt mà
+        // 1. HEADER - BREADCRUMB (Chỉ hướng)
+        printf("\n  " CL_BORDER "Dashboard > " RESET BOLD "EXACT SEARCH" RESET "\n");
+        printf(CL_BORDER "  " "────────────────────────────────────────────────────────────" "\n" RESET);
+        // 2. GIAO DIỆN CHỌN CHẾ ĐỘ
+        printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
+        printf(CL_BORDER "  │" RESET "  " BOLD "VUI LÒNG CHỌN PHẠM VI TÌM KIẾM" RESET "                            " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  ├──────┬─────────────────────────────────────────────────────┤\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "01" CL_BORDER "  │" RESET " ⛩️   Tra cứu Kanji (Mặt chữ / Hán Việt)               " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "02" CL_BORDER "  │" RESET " 📖  Tra cứu Từ vựng (Nhật/Hira/Romaji/Việt)         " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "00" CL_BORDER "  │" RESET " ↩️   Quay lại Dashboard                               " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  └──────┴─────────────────────────────────────────────────────┘\n" RESET);
+        printf("\n  " BOLD "Lựa chọn của bạn" RESET " » " CL_KEY);
+        if (scanf("%d", &choice) != 1) { while(getchar() != '\n'); continue; }
+        getchar(); // Clear buffer
+        printf(RESET);
+        if (choice == 0) break;
+        // 3. GIAO DIỆN NHẬP TỪ KHÓA (Thiết kế thanh Input)
+        printf("\n  " CL_HIGHLIGHT " SEARCH BAR " RESET "                                             \n");
+        printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
+        printf(CL_BORDER "  │ " RESET "Nhập từ khóa chính xác " BOLD "🔍" RESET ": " CL_LOGO);
+        // Giả sử inputString là hàm bạn đã viết để lấy chuỗi
+        fgets(keyword, sizeof(keyword), stdin);
+        keyword[strcspn(keyword, "\n")] = 0; // Xóa ký tự xuống dòng
+        printf(RESET CL_BORDER "  └────────────────────────────────────────────────────────────┘\n" RESET);
+        // Hiệu ứng giả lập đang tìm kiếm
+        printf("  " CL_TEXT "Đang truy xuất dữ liệu... " RESET "\n");
+        // 4. HIỂN THỊ KẾT QUẢ
+        printf("\x1b[2J\x1b[H"); 
+        printf("\n  " CL_BORDER "Dashboard > Exact Search > " RESET BOLD "RESULTS" RESET "\n");
+        printf(CL_BORDER "  " "────────────────────────────────────────────────────────────" "\n" RESET);
+        printf("  " BOLD "Kết quả cho: " RESET "\"" CL_LOGO "%s" RESET "\"\n", keyword);
+        printf(CL_BORDER "  " "────────────────────────────────────────────────────────────" "\n\n" RESET);
+        // Khối hiển thị nội dung kết quả
+        if (choice == 1) {
+            exactlySearchingKanji(kanjiHT, keyword);
+        } else if (choice == 2) {
+            exactlySearching(vocabHT, keyword);
+        } else {
+            printf("  " CL_LOGO " [!] " RESET "Lựa chọn không hợp lệ.\n");
+        }
+        // Phần chân kết quả
+        printf("\n  " CL_BORDER "────────────────────────────────────────────────────────────" RESET);
+        printf("\n  " CL_KEY "Nhấn Enter để tiếp tục tìm kiếm hoặc quay lại..." RESET);
+        getchar();
+    }
 }
-
-
 void menuKMPSearch(KanjiList *L) {
     int option;
     char keyword[256];
-    system("cls");
-    printf("\n==== TÌM KIẾM THEO MẪU ====\n");
-    printf("[1]. Khớp theo mặt chữ Kanji\n");
-    printf("[2]. Khớp theo cách đọc Hiragana\n");
-    printf("[3]. Khớp theo phiên âm Romaji\n");
-    printf("[4]. Khớp theo nghĩa Tiếng Việt\n");
-    printf("[0]. Quay lại\n");
-    printf("Chọn [1-4]: ");
-    scanf("%d", &option); getchar();
-
-    if (option < 1 || option > 4) return;
-
-    printf("Nhập từ cần tìm : ");
-    inputString(keyword, 256);
-
-    system("cls");
-    printf("Kết quả tìm kiếm cho: %s\n", keyword);
-    substringSearching(L, keyword, option); 
-    printf("\n-------------------------------------------\n");
+    while (1) {
+        printf("\x1b[2J\x1b[H"); // Clear screen mượt mà hơn system("cls")
+        // 1. HEADER & BREADCRUMB
+        printf("\n  " CL_BORDER "Dashboard > Search > " RESET BOLD "PATTERN MATCHING (KMP)" RESET "\n");
+        printf(CL_BORDER "  " "────────────────────────────────────────────────────────────" "\n" RESET);
+        // 2. OPTIONS BOX (Căn chỉnh chính xác 60 cột nội dung)
+        printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
+        printf(CL_BORDER "  │" RESET "  " BOLD "CHẾ ĐỘ KHỚP MẪU THÔNG MINH (KMP)" RESET "                         " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  ├──────┬─────────────────────────────────────────────────────┤\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "01" CL_BORDER "  │" RESET " ⛩️   Khớp theo mặt chữ Kanji                         " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "02" CL_BORDER "  │" RESET " 🎋  Khớp theo cách đọc Hiragana                     " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "03" CL_BORDER "  │" RESET " 🔡  Khớp theo phiên âm Romaji                       " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "04" CL_BORDER "  │" RESET " 🇻🇳  Khớp theo nghĩa Tiếng Việt                      " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "00" CL_BORDER "  │" RESET " ↩️   Quay lại                                        " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  └──────┴─────────────────────────────────────────────────────┘\n" RESET);
+        printf("\n  " BOLD "Chọn chế độ [0-4]" RESET " » " CL_KEY);
+        if (scanf("%d", &option) != 1) { while(getchar() != '\n'); continue; }
+        getchar(); // Clear buffer
+        printf(RESET);
+        if (option == 0) break;
+        if (option < 1 || option > 4) continue;
+        // 3. SEARCH BAR (Thiết kế đồng bộ với Exact Search)
+        printf("\n  " CL_HIGHLIGHT " KMP INPUT " RESET "\n");
+        printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
+        printf(CL_BORDER "  │ " RESET "Nhập chuỗi cần khớp " BOLD "🧩" RESET ": " CL_LOGO);
+        // Sử dụng hàm input của bạn
+        inputString(keyword, 256);
+        printf(RESET CL_BORDER "  └────────────────────────────────────────────────────────────┘\n" RESET);
+        // 4. RESULTS PAGE
+        printf("\x1b[2J\x1b[H"); 
+        printf("\n  " CL_BORDER "Dashboard > KMP Search > " RESET BOLD "RESULTS" RESET "\n");
+        printf(CL_BORDER "  " "────────────────────────────────────────────────────────────" "\n" RESET);
+        printf("  " BOLD "Kết quả cho mẫu: " RESET "\"" CL_LOGO "%s" RESET "\"\n", keyword);
+        printf(CL_BORDER "  " "────────────────────────────────────────────────────────────" "\n\n" RESET);
+        // Gọi logic tìm kiếm của bạn
+        substringSearching(L, keyword, option); 
+        printf("\n  " CL_BORDER "────────────────────────────────────────────────────────────" RESET);
+        printf("\n  " CL_KEY "Nhấn Enter để tiếp tục..." RESET);
+        getchar();
+    }
 }
 
 void menuFuzzySearch(KanjiList *L) {
     int option;
     char keyword[256];
-    system("cls");
-    printf("\n==== TÌM KIẾM MỜ ====\n");
-    printf("[1]. Khớp theo mặt chữ Kanji\n");
-    printf("[2]. Khớp theo cách đọc Hiragana\n");
-    printf("[3]. Khớp theo phiên âm Romaji\n");
-    printf("[4]. Khớp theo nghĩa Tiếng Việt\n");
-    printf("[0]. Quay lại\n");
-    printf("Chọn [1-4]: ");
-    scanf("%d", &option); getchar();
-
-    if (option < 1 || option > 4) return;
-
-    printf("Nhập từ cần tìm : ");
-    inputString(keyword, 256);
-
-    system("cls");
-    printf("Kết quả tìm kiếm cho: %s\n", keyword);
-    fuzzySearching(L, keyword, option); 
-    printf("\n-------------------------------------------\n");
+    while (1) {
+        printf("\x1b[2J\x1b[H"); // Clear screen mượt mà
+        // 1. HEADER & BREADCRUMB
+        printf("\n  " CL_BORDER "Dashboard > Search > " RESET BOLD "FUZZY SEARCH (TÌM MỜ)" RESET "\n");
+        printf(CL_BORDER "  " "────────────────────────────────────────────────────────────" "\n" RESET);
+        printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
+        printf(CL_BORDER "  │" RESET "  " BOLD "CHẾ ĐỘ TÌM KIẾM GẦN ĐÚNG (FUZZY)" RESET "                         " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  ├──────┬─────────────────────────────────────────────────────┤\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "01" CL_BORDER "  │" RESET " 🌫️   Khớp mờ mặt chữ Kanji                           " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "02" CL_BORDER "  │" RESET " 🍃  Khớp mờ cách đọc Hiragana                       " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "03" CL_BORDER "  │" RESET " 🔤  Khớp mờ phiên âm Romaji                         " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "04" CL_BORDER "  │" RESET " 💬  Khớp mờ nghĩa Tiếng Việt                        " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "00" CL_BORDER "  │" RESET " ↩️   Quay lại                                        " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  └──────┴─────────────────────────────────────────────────────┘\n" RESET);
+        printf("\n  " BOLD "Chọn chế độ [0-4]" RESET " » " CL_KEY);
+        if (scanf("%d", &option) != 1) { while(getchar() != '\n'); continue; }
+        getchar(); // Clear buffer
+        printf(RESET);
+        if (option == 0) break;
+        if (option < 1 || option > 4) continue;
+        // 3. FUZZY SEARCH BAR
+        printf("\n  " CL_HIGHLIGHT " FUZZY INPUT " RESET "\n");
+        printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
+        printf(CL_BORDER "  │ " RESET "Nhập từ khóa (sai dấu/ký tự) " BOLD "☁️" RESET ": " CL_LOGO);
+        inputString(keyword, 256);
+        printf(RESET CL_BORDER "  └────────────────────────────────────────────────────────────┘\n" RESET);
+        // Hiển thị trạng thái tính toán
+        printf("  " CL_TEXT "Đang tính toán khoảng cách chỉnh sửa (Levenshtein)..." RESET "\n");
+        // 4. RESULTS PAGE
+        printf("\x1b[2J\x1b[H"); 
+        printf("\n  " CL_BORDER "Dashboard > Fuzzy Search > " RESET BOLD "RESULTS" RESET "\n");
+        printf(CL_BORDER "  " "────────────────────────────────────────────────────────────" "\n" RESET);
+        printf("  " BOLD "Kết quả tìm mờ cho: " RESET "\"" CL_LOGO "%s" RESET "\"\n", keyword);
+        printf(CL_BORDER "  " "────────────────────────────────────────────────────────────" "\n\n" RESET);
+        fuzzySearching(L, keyword, option); 
+        printf("\n  " CL_BORDER "────────────────────────────────────────────────────────────" RESET);
+        printf("\n  " CL_KEY "Nhấn Enter để thực hiện lượt tìm kiếm mới..." RESET);
+        getchar();
+    }
 }
 
 void caseNo1(KanjiList *L, HashTable *vHT, HashTableK *kHT) {
     int choice;
     while(1) {
-        system("cls");
-        printf("\n======== HỆ THỐNG TÌM KIẾM ========\n");
-        printf("[1]. Exact Match (Tìm đúng 100%%)\n");
-        printf("[2]. Pattern Match (KMP - Tìm chuỗi con)\n");
-        printf("[3]. Fuzzy Match (Levenshtein - Tìm gần đúng)\n");
-        printf("[0]. Thoát ra Menu chính\n");
-        printf(">>> Chọn loại hình: ");
-        if (scanf("%d", &choice) != 1) { while(getchar() != '\n'); continue; }
-        getchar();
-
+        // Dùng ANSI để xóa màn hình cho mượt (không bị nháy như system("cls"))
+        printf("\x1b[2J\x1b[H"); 
+        // 1. HEADER & BREADCRUMB
+        printf("\n  " CL_BORDER "Dashboard > " RESET BOLD "HỆ THỐNG TÌM KIẾM" RESET "\n");
+        printf(CL_BORDER "  ────────────────────────────────────────────────────────────" "\n" RESET);
+        // 2. SEARCH MENU BOX
+        // Mỗi dòng dưới đây đều được tính toán để viền phải │ nằm đúng cột 62
+        printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
+        printf(CL_BORDER "  │" RESET "  " BOLD "CHỌN PHƯƠNG THỨC TRA CỨU" RESET "                               " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  ├──────┬─────────────────────────────────────────────────────┤\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "01" CL_BORDER "  │" RESET " 🎯  Exact Match (Tìm chính xác 100%%)               " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "02" CL_BORDER "  │" RESET " 🔍  Pattern Match (KMP - Tìm chuỗi con)            " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "03" CL_BORDER "  │" RESET " 🌫️   Fuzzy Match (Tìm gần đúng)                      " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "00" CL_BORDER "  │" RESET " ↩️   Quay lại Menu chính                             " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  └──────┴─────────────────────────────────────────────────────┘\n" RESET);
+        // 3. PROMPT NHẬP LIỆU
+        printf("\n  " BOLD "Lựa chọn của bạn" RESET " » " CL_KEY);
+        if (scanf("%d", &choice) != 1) { 
+            while(getchar() != '\n'); 
+            continue; 
+        }
+        getchar(); // Đọc bỏ ký tự '\n' dư thừa
+        printf(RESET);
         if (choice == 0) break;
         switch (choice) {
             case 1: menuExactSearch(vHT, kHT); break;
             case 2: menuKMPSearch(L); break;
             case 3: menuFuzzySearch(L); break;
+            default:
+                printf("\n  " "\x1b[31m" "(!) Lựa chọn không hợp lệ. Vui lòng chọn lại." RESET);
+                break;
         }
-        printf("Nhấn Enter để chọn lại loại tìm kiếm...");
+        printf("\n  " CL_BORDER "────────────────────────────────────────────────────────────" RESET);
+        printf("\n  " CL_KEY "Nhấn Enter để quay lại danh sách tìm kiếm..." RESET);
         getchar();
     }
 }

@@ -6,7 +6,12 @@
 #endif
 #include "kanji_search_exact.h"
 #include "../data_structures.h"
-
+#define CLR_PRIMARY "\x1b[38;5;75m"   // Xanh Blue
+#define CLR_SUCCESS "\x1b[38;5;82m"   // Xanh lá
+#define CLR_WARN    "\x1b[38;5;214m"  // Cam/Vàng
+#define CLR_TEXT    "\x1b[38;5;253m"  // Trắng xám
+#define CLR_RESET   "\x1b[0m"
+#define BOLD        "\x1b[1m"
 HashTableK* createHashTableK(int size) {
     HashTableK *ht = malloc(sizeof(HashTableK));
     if (ht == NULL) return NULL;
@@ -65,53 +70,59 @@ void buildHashTableForKanji(KanjiList *L, HashTableK *ht) {
 
 void printOutKanji(Kanji *k) {
     if (k == NULL) return;
-    printf("============================================================\n");
-    printf("KANJI: %s  |  HAN VIET: %s || STT: %d\n", 
+
+    // --- Header: Kanji chính ---
+    printf(CLR_PRIMARY "╔══════════════════════════════════════════════════════════╗\n");
+    printf("║ " CLR_RESET BOLD " KANJI: %-10s " CLR_PRIMARY "│" CLR_RESET BOLD " HÁN VIỆT: %-12s " CLR_PRIMARY "│" CLR_RESET " STT: %-4d " CLR_PRIMARY "║\n", 
             k->kanji ? k->kanji : "N/A", 
             k->hanViet ? k->hanViet : "N/A",
             k->stt);
-    printf("Bo thu: %s  |  So net: %s\n", 
+    printf(CLR_PRIMARY "╠══════════════════════════════════════════════════════════╣\n" CLR_RESET);
+
+    // --- Thông tin chi tiết ---
+    printf(CLR_TEXT "  ➤ " BOLD "Bộ thủ: " CLR_RESET "%-15s" CLR_TEXT " ➤ " BOLD "Số nét: " CLR_RESET "%s\n", 
             k->radical ? k->radical : "N/A", 
             k->stroke ? k->stroke : "N/A");
-    printf("Giai nghia: %s\n", k->description ? k->description : "N/A");
     
-    // In On-yomi
-    printf("Am On: ");
+    printf(CLR_TEXT "  ➤ " BOLD "Giải nghĩa: " CLR_RESET "%s\n", k->description ? k->description : "N/A");
+    // --- Cách đọc (On-Kun) ---
+    printf(CLR_PRIMARY "  ╟────────────────────────────────────────────────────────╢\n" CLR_RESET);
+    printf(CLR_WARN "  [Âm On] : " CLR_RESET);
     for(int i = 0; i < k->onCount; i++) {
-        printf("%s (%s)%s", k->on[i].jp, k->on[i].romaji, (i == k->onCount - 1) ? "" : ", ");
+        printf(BOLD "%s" CLR_RESET " (%s)%s", k->on[i].jp, k->on[i].romaji, (i == k->onCount - 1) ? "" : ", ");
     }
-    
-    // In Kun-yomi
-    printf("\nAm Kun: ");
+    printf(CLR_WARN "\n  [Âm Kun]: " CLR_RESET);
     for(int i = 0; i < k->kunCount; i++) {
-        printf("%s (%s)%s", k->kun[i].jp, k->kun[i].romaji, (i == k->kunCount - 1) ? "" : ", ");
+        printf(BOLD "%s" CLR_RESET " (%s)%s", k->kun[i].jp, k->kun[i].romaji, (i == k->kunCount - 1) ? "" : ", ");
     }
-
-    // In danh sach tu vung lien quan
-    printf("\n\n--- Tu vung lien quan (%d tu) ---\n", k->vocabsCount);
+    printf("\n" CLR_PRIMARY "  ╟" BOLD "─── TỪ VỰNG LIÊN QUAN (%d từ) ───────────────────────────╢" CLR_RESET "\n", k->vocabsCount);
+    
     if (k->vocabsCount > 0 && k->vocabs != NULL) {
         for (int i = 0; i < k->vocabsCount; i++) {
             Vocab *v = &k->vocabs[i];
-            printf("  %d. %s [%s - %s]\n", 
-                   i + 1, 
+            // Dòng từ vựng chính
+            printf("    " CLR_SUCCESS "● " BOLD "%-15s" CLR_RESET " " CLR_TEXT "[%s - %s]" CLR_RESET "\n", 
                    v->vocab ? v->vocab : "N/A", 
                    v->hiragana ? v->hiragana : "N/A", 
                    v->romaji ? v->romaji : "N/A");
-            printf("     Nghia: %s\n", v->meaning ? v->meaning : "N/A");
             
-            // In them vi du neu co (Optionally)
+            // Ý nghĩa từ vựng
+            printf("      " CLR_TEXT "└─ Ý nghĩa: " CLR_RESET "%s\n", v->meaning ? v->meaning : "N/A");
+            
+            // Ví dụ (Nếu có)
             if (v->samplesCount > 0) {
                 for (int j = 0; j < v->samplesCount; j++) {
-                    printf("      +  %s (%s)\n", v->samples[j].jp, v->samples[j].vn);
+                    printf("         " CLR_WARN "↳ " CLR_TEXT "Ex: " CLR_RESET "%-25s " CLR_TEXT "→ %s" CLR_RESET "\n", 
+                           v->samples[j].jp, v->samples[j].vn);
                 }
             }
+            if (i < k->vocabsCount - 1) printf("\n"); 
         }
     } else {
-        printf("  (Khong co tu vung di kem)\n");
+        printf(CLR_TEXT "    (Hiện không có từ vựng đi kèm)\n" CLR_RESET);
     }
-    printf("============================================================\n");
+    printf(CLR_PRIMARY "╚══════════════════════════════════════════════════════════╝\n" CLR_RESET);
 }
-
 void exactlySearchingKanji(HashTableK *ht, char *key) {
     if (!ht || !key) return;
     

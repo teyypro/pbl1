@@ -13,7 +13,14 @@
 #include "utils.h"
 
 #define MAX_SENTENCE 1024
-
+#define CL_BORDER    "\x1b[38;5;239m"     // Màu xám (Kẻ khung)
+#define CL_HIGHLIGHT "\x1b[48;5;236m\x1b[38;5;208m" // Nền xám đậm, chữ cam (Header)
+#define CL_LOGO      "\x1b[38;5;208m"     // Màu cam (Chữ Kanji)
+#define CL_KEY       "\x1b[38;5;111m"     // Màu xanh lơ (Hán Việt/Số)
+#define CL_TEXT      "\x1b[38;5;253m"     // Màu trắng xám (Mô tả)
+#define FG_DIM       "\x1b[38;5;244m"     // Màu xám mờ (Ghi chú phụ)
+#define BOLD         "\x1b[1m"            // Đậm
+#define RESET        "\x1b[0m"            // Reset
 /* ====================== HASH TABLE CHO KANJI ====================== */
 
 typedef struct KanjiNode {
@@ -86,30 +93,39 @@ void freeKanjiHashTable(KanjiHashTable* table)
 
 void printOutKanjiInfo(Kanji* info) {
     if (!info) {
-        printf("Khong co thong tin kanji\n");
+        printf("\n  " "\x1b[31m" " [!] Không có thông tin Kanji." RESET "\n");
         return;
     }
-    
-    // Thông tin Kanji
-    printf("▶ Kanji: %s\n", info->kanji);
-    printf("  STT       : %d\n", info->stt);
-    printf("  Hán Việt  : %s\n", info->hanViet ? info->hanViet : "?");
-    printf("  Nghĩa     : %s\n", info->description ? info->description : "?");
-    
-    // Từ vựng liên quan
+    // Header của thẻ thông tin
+    printf("\n  " CL_HIGHLIGHT " KANJI INFO " RESET "\n");
+    printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
+    printf(CL_BORDER "  │ " RESET "Chữ: " CL_LOGO BOLD "%-10s" RESET 
+           " Hán Việt: " CL_KEY BOLD "%-28s" RESET CL_BORDER "│\n" RESET, 
+           info->kanji, (info->hanViet ? info->hanViet : "?"));
+
+    printf(CL_BORDER "  │ " RESET "Số thứ tự: " CL_TEXT "%-49d" RESET CL_BORDER "│\n" RESET, info->stt);
+    printf(CL_BORDER "  ├────────────────────────────────────────────────────────────┤\n" RESET);
+    printf(CL_BORDER "  │ " RESET BOLD "Giải nghĩa: " RESET "                                               " CL_BORDER "│\n" RESET);
+    printf(CL_BORDER "  │ " RESET CL_TEXT "%-58s" RESET CL_BORDER " │\n" RESET, 
+           (info->description ? info->description : "Chưa có mô tả."));
+    printf(CL_BORDER "  ├────────────────────────────────────────────────────────────┤\n" RESET);
+    // 4. Danh sách từ vựng liên quan
     if (info->vocabsCount > 0) {
-        printf("  Từ vựng   :\n");
-        int maxDisplay = info->vocabsCount;
-        for (int j = 0; j < maxDisplay; j++) {
+        printf(CL_BORDER "  │ " RESET BOLD "Từ vựng liên quan (" CL_KEY "%d" RESET BOLD "):" RESET "                                │\n" RESET, info->vocabsCount);
+        for (int j = 0; j < info->vocabsCount; j++) {
             Vocab* v = &info->vocabs[j];
-            printf("    - %s (%s): %s\n", 
-                   v->vocab ? v->vocab : "?", 
-                   v->hiragana ? v->hiragana : "?", 
-                   v->meaning ? v->meaning : "?");
+            // In mỗi dòng từ vựng với Bullet point màu cam
+            printf(CL_BORDER "  │ " RESET "  " CL_LOGO "• " RESET BOLD "%-12s" RESET 
+                   FG_DIM "(" RESET "%-14s" FG_DIM ")" RESET " : %-18s " CL_BORDER "│\n" RESET,
+                   (v->vocab ? v->vocab : "?"), 
+                   (v->hiragana ? v->hiragana : "?"), 
+                   (v->meaning ? v->meaning : "?"));
         }
+    } else {
+        printf(CL_BORDER "  │ " RESET "  " FG_DIM "(Không có từ vựng liên quan)" RESET "                        " CL_BORDER "│\n" RESET);
     }
-    
-    printf("----------------------------------------\n");
+    // Đóng khung
+    printf(CL_BORDER "  └────────────────────────────────────────────────────────────┘\n" RESET);
 }
 
 void analyzeJapaneseSentence(KanjiList *allData) {

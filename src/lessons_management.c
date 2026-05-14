@@ -8,7 +8,12 @@
 #include "../data_structures.h"
 
 #define KANJI_PER_LESSON 16
-
+#define CLR_PRIMARY "\x1b[38;5;75m"   // Xanh Blue
+#define CLR_SUCCESS "\x1b[38;5;82m"   // Xanh lá
+#define CLR_WARN    "\x1b[38;5;214m"  // Cam/Vàng
+#define CLR_HEADER  "\x1b[38;5;225m"  // Hồng nhạt/Trắng sáng
+#define CLR_RESET   "\x1b[0m"
+#define BOLD        "\x1b[1m"
 void displayAllLessons(KanjiList *L) {
     int totalLessons = L->kanjiCount / KANJI_PER_LESSON;
 
@@ -38,54 +43,53 @@ void displayDetailedKanji(Kanji *k) {
     system("cls || clear");
     
     // --- Header ---
-    printf("====================================================\n");
-    printf("   THÔNG TIN CHI TIẾT KANJI: [ %s ]\n", k->kanji ? k->kanji : "N/A");
-    printf("====================================================\n");
+    printf(CLR_PRIMARY "╔══════════════════════════════════════════════════╗\n");
+    printf("║ " CLR_HEADER BOLD "        THÔNG TIN CHI TIẾT KANJI: [ %-3s ]" CLR_PRIMARY "      ║\n", k->kanji ? k->kanji : "N/A");
+    printf("╚══════════════════════════════════════════════════╝\n" CLR_RESET);
 
     // --- Thông tin cơ bản ---
-    printf("  Hán Việt: %s | STT: %d\n", k->hanViet ? k->hanViet : "N/A", k->stt);
-    printf("  Bộ thủ: %s | Số nét: %s\n", k->radical ? k->radical : "N/A", k->stroke ? k->stroke : "N/A");
-    printf("  Giải nghĩa: %s\n", k->description ? k->description : "N/A");
-    printf("----------------------------------------------------\n");
+    printf(BOLD "  %-12s " CLR_RESET ": %-15s " BOLD "STT" CLR_RESET ": %d\n", "Hán Việt", k->hanViet ? k->hanViet : "N/A", k->stt);
+    printf(BOLD "  %-12s " CLR_RESET ": %-15s " BOLD "Số nét" CLR_RESET ": %s\n", "Bộ thủ", k->radical ? k->radical : "N/A", k->stroke ? k->stroke : "N/A");
+    printf(BOLD "  %-12s " CLR_RESET ": %s\n", "Giải nghĩa", k->description ? k->description : "N/A");
+    printf(CLR_PRIMARY "  ╟────────────────────────────────────────────────╢\n" CLR_RESET);
 
     // --- Âm On / Kun ---
-    printf("  [Âm ON]: ");
+    printf(CLR_WARN "  [Âm ON]  : " CLR_RESET);
     if (k->onCount > 0) {
         for (int i = 0; i < k->onCount; i++) {
-            printf("%s (%s)%s", k->on[i].jp, k->on[i].romaji, (i == k->onCount - 1) ? "" : ", ");
+            printf(BOLD "%s" CLR_RESET " (%s)%s", k->on[i].jp, k->on[i].romaji, (i == k->onCount - 1) ? "" : ", ");
         }
     } else printf("N/A");
     
-    printf("\n  [Âm KUN]: ");
+    printf("\n" CLR_WARN "  [Âm KUN] : " CLR_RESET);
     if (k->kunCount > 0) {
         for (int i = 0; i < k->kunCount; i++) {
-            printf("%s (%s)%s", k->kun[i].jp, k->kun[i].romaji, (i == k->kunCount - 1) ? "" : ", ");
+            printf(BOLD "%s" CLR_RESET " (%s)%s", k->kun[i].jp, k->kun[i].romaji, (i == k->kunCount - 1) ? "" : ", ");
         }
     } else printf("N/A");
-    printf("\n----------------------------------------------------\n");
+    printf("\n" CLR_PRIMARY "  ╟────────────────────────────────────────────────╢\n" CLR_RESET);
 
     // --- Từ vựng liên quan ---
-    printf("  TỪ VỰNG LIÊN QUAN (%d)\n", k->vocabsCount);
+    printf(BOLD "  TỪ VỰNG LIÊN QUAN (%d)\n" CLR_RESET, k->vocabsCount);
     if (k->vocabsCount > 0 && k->vocabs != NULL) {
         for (int i = 0; i < k->vocabsCount; i++) {
             Vocab *v = &k->vocabs[i];
-            printf("\n  %d. %s [%s / %s]\n", i + 1, v->vocab, v->hiragana, v->romaji);
-            printf("     Nghĩa: %s\n", v->meaning);
+            printf("\n    " CLR_SUCCESS "%d. %-10s " CLR_RESET "[%s / %s]\n", i + 1, v->vocab, v->hiragana, v->romaji);
+            printf("       └─ Nghĩa: %s\n", v->meaning);
             
-            // In mẫu câu ví dụ
             if (v->samplesCount > 0) {
                 for (int j = 0; j < v->samplesCount; j++) {
-                    printf("     >> Ví dụ: %s\n", v->samples[j].jp);
-                    printf("        Dịch : %s\n", v->samples[j].vn);
+                    printf("          " CLR_WARN "↳ " CLR_RESET "Ví dụ: %s\n", v->samples[j].jp);
+                    printf("            Dịch : %s\n", v->samples[j].vn);
                 }
             }
         }
     } else {
-        printf("  (Không có dữ liệu từ vựng)\n");
+        printf("    (Không có dữ liệu từ vựng)\n");
     }
 
-    printf("\n====================================================\n");
-    printf(">> Nhấn Enter để quay lại...");
+    printf(CLR_PRIMARY "\n╚══════════════════════════════════════════════════╝\n" CLR_RESET);
+    printf(CLR_WARN " >> Nhấn Enter để quay lại..." CLR_RESET);
     
     getchar();
 }
