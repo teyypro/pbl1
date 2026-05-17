@@ -8,7 +8,14 @@
 #include "utils.h"
 #include "../data_structures.h"
 #define MAX_GAP 2
-
+#define RESET         "\x1b[0m"
+#define BOLD          "\x1b[1m"
+#define CL_LOGO       "\x1b[38;5;208m" 
+#define CL_BORDER     "\x1b[38;5;239m" 
+#define CL_TEXT       "\x1b[38;5;253m" 
+#define CL_KEY        "\x1b[38;5;111m" 
+#define CL_HIGHLIGHT  "\x1b[48;5;236m\x1b[38;5;208m" 
+#define CL_SUCCESS    "\x1b[1;32m"
 int min3(int a, int b, int c) {
     int m = a;
     if (b < m) m = b;
@@ -16,7 +23,6 @@ int min3(int a, int b, int c) {
     return m;
     
 }
-
 int levenshteinDistance(wchar_t *s1, wchar_t *s2) {
     int len1 = wcslen(s1);
     int len2 = wcslen(s2);
@@ -45,7 +51,6 @@ int levenshteinDistance(wchar_t *s1, wchar_t *s2) {
     free(arr);
     return res;
 }
-
 void printFuzzyResult(int gap, Vocab *v) {
     char gapStr[10];
     if (gap == 0) {
@@ -53,15 +58,16 @@ void printFuzzyResult(int gap, Vocab *v) {
     } else {
         sprintf(gapStr, "%d", gap);
     }
-
-    printf("%-7s %-20s %-20s %-20s %-30s\n", 
-        gapStr, 
-        v->vocab, 
-        v->hiragana, 
-        v->romaji, 
-        v->meaning);
-
-
+    char tagStr[40];
+    if (gap == 0) {
+        sprintf(tagStr, "\x1b[1;32m[%s]\x1b[0m", gapStr); 
+    } else {
+        sprintf(tagStr, "\x1b[38;5;246m[%s]\x1b[0m", gapStr);
+    }
+    printf("\n  " CL_LOGO "📖 " RESET "%s " BOLD CL_LOGO "%s" RESET "\n", tagStr, v->vocab);
+    printf("    " CL_TEXT "💬 %s (%s)" RESET "\n", v->hiragana, v->romaji);
+    printf("    " CL_KEY "🔍 %s" RESET "\n", v->meaning);
+    printf(CL_BORDER "  ──────────────────────────────────────────────────\n" RESET);
 }
 
 void fuzzySearching(KanjiList *L, char *inputUTF8, int option) {

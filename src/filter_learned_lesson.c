@@ -76,53 +76,42 @@ void freeLearnedHashSet(LearnedHashSet* set)
 }
 
 void runFilterLearnedVocab(KanjiList *allData) {
-
     if (!allData || allData->kanjiCount == 0) {
         printf("Khong co du lieu.\n");
         return;
     }
-
     /* Nhập các bài muốn review */
     int selected[50] = {0};
     int numSelected = 0, input, maxLesson = 0;
-
     printf("Nhap cac bai can review (ket thuc bang 0): ");
     while (scanf("%d", &input) == 1 && input != 0 && numSelected < 50) {
         selected[numSelected++] = input;
         if (input > maxLesson) maxLesson = input;
     }
-
     if (numSelected == 0) {
         printf("Khong co bai nao duoc chon.\n");
         return;
     }
-
     /* Khởi tạo cấu trúc dữ liệu */
     wchar_t** targetKanjiList = malloc((maxLesson * KANJI_PER_LESSON + 10) * sizeof(wchar_t*));
     LearnedHashSet* learnedHash = createLearnedHashSet();
-
     if (!targetKanjiList || !learnedHash) {
         printf("Loi cap phat bo nho!\n");
         free(targetKanjiList);
         freeLearnedHashSet(learnedHash);
         return;
     }
-
     int targetCount = 0;
-
     /* Thu thập learnedKanji (vào HashSet) và targetKanji (vào mảng) */
     for (int lesson = 1; lesson <= maxLesson; lesson++) {
         int start = (lesson - 1) * KANJI_PER_LESSON;
         int end   = start + KANJI_PER_LESSON;
         if (end > allData->kanjiCount) end = allData->kanjiCount;
-
         for (int j = start; j < end; j++) {
             wchar_t* kanjiW = allData->kanjis[j].kanji_w;
             if (!kanjiW) continue;
-
             /* Thêm vào danh sách đã học (hash set) */
             addLearnedKanji(learnedHash, kanjiW);
-
             /* Nếu bài này được chọn → thêm vào danh sách mục tiêu targetKanjiList*/
             for (int k = 0; k < numSelected; k++) {
                 if (selected[k] == lesson) {
@@ -146,7 +135,6 @@ void runFilterLearnedVocab(KanjiList *allData) {
         for (int v = 0; v < kanjiEntry->vocabsCount; v++) {
             Vocab *vocab = &kanjiEntry->vocabs[v];
             if (!vocab->vocab || !vocab->vocab_w) continue;
-
             const wchar_t* text = vocab->vocab_w;
             int hasTargetKanji = 0;
             int allKanjiKnown = 1;

@@ -16,6 +16,7 @@
 #include "utils.h"
 #include "../data_structures.h"
 #include "dashboard.h"
+#include "radical_graph.h"
 // --- Định nghĩa Bảng màu (Đã được phối lại hài hòa hơn)
 #define CL_LOGO      "\x1b[38;5;208m" // Màu cam đậm (Thương hiệu)
 #define CL_BORDER    "\x1b[38;5;239m" // Màu xám tối (Giảm chói, tôn nội dung)
@@ -39,23 +40,22 @@ void displayMenu() {
     printf("   | |\\_\\/ ` | ' \\| | |  |_|   |_|     \n");
     printf("   |_| \\_\\__,_|_| |_| |_|" RESET "  Dictionary " CL_LOGO "v3.0\n" RESET);
     printf(CL_LOGO "                   |__/                  \n\n" RESET);
-
+#define BG_MENU "\x1b[48;5;236m"
     // 2. MAIN INTERFACE (Khung được fix cứng 60 cột bên trong)
     printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
     
     // Header giả lập tab đang chọn
-    printf(CL_BORDER "  │" RESET CL_HIGHLIGHT " DASHBOARD " RESET CL_TEXT "  History    Favorites    Settings    Help      " CL_BORDER "│\n" RESET);
+    printf(CL_BORDER "  │" BG_MENU CL_TEXT "" RESET CL_HIGHLIGHT " DASHBOARD " RESET CL_TEXT "  History    Favorites    Settings    Help       " CL_BORDER "│\n" RESET);
     printf(CL_BORDER "  ├──────┬─────────────────────────────────────────────────────┤\n" RESET);
 
     // Nội dung Menu kèm Icon (Padding đã được tính toán chính xác để thẳng hàng)
     printf(CL_BORDER "  │ " RESET BOLD "MENU" CL_BORDER " │" RESET "                                                     " CL_BORDER "│\n" RESET);
     printf(CL_BORDER "  │  " CL_KEY "01" CL_BORDER "  │" RESET " 🔍 Tìm kiếm (Chính xác / KMP / Tìm mờ)              " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  │  " CL_KEY "02" CL_BORDER "  │" RESET " 📁 Quản lý từ điển cá nhân                           " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  │  " CL_KEY "03" CL_BORDER "  │" RESET " 📑 Lọc từ vựng đã học                                " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  │  " CL_KEY "04" CL_BORDER "  │" RESET " 🧠 Phân tích câu (Parser)                            " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  │  " CL_KEY "05" CL_BORDER "  │" RESET " 📝 Bài tập hàng ngày                                 " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  │  " CL_KEY "06" CL_BORDER "  │" RESET " 🔄 Ôn tập từ sai                                     " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  │  " CL_KEY "07" CL_BORDER "  │" RESET " ⛩️  Kanji họ hàng (Bộ thủ)                          " CL_BORDER "│\n" RESET);
+    printf(CL_BORDER "  │  " CL_KEY "02" CL_BORDER "  │" RESET " 📁 Quản lý từ điển cá nhân                          " CL_BORDER "│\n" RESET);
+    printf(CL_BORDER "  │  " CL_KEY "03" CL_BORDER "  │" RESET " 📑 Lọc từ vựng đã học                               " CL_BORDER "│\n" RESET);
+    printf(CL_BORDER "  │  " CL_KEY "04" CL_BORDER "  │" RESET " 🧠 Phân tích câu (Parser)                           " CL_BORDER "│\n" RESET);
+    printf(CL_BORDER "  │  " CL_KEY "05" CL_BORDER "  │" RESET " 📝 Bài tập hàng ngày                                " CL_BORDER "│\n" RESET);
+    printf(CL_BORDER "  │  " CL_KEY "06" CL_BORDER "  │" RESET " ⛩️  Kanji họ hàng (Bộ thủ)                           " CL_BORDER "│\n" RESET);
     printf(CL_BORDER "  ├──────┴─────────────────────────────────────────────────────┤\n" RESET);
     
     // Nút thoát nổi bật
@@ -63,7 +63,7 @@ void displayMenu() {
     printf(CL_BORDER "  └────────────────────────────────────────────────────────────┘\n" RESET);
 
     // 3. FOOTER - Thanh trạng thái
-    printf("  " "\x1b[48;5;236m" CL_BORDER " Shortcut: " RESET " " CL_KEY "1-7: Chọn" RESET " | " CL_KEY "0: Thoát" RESET " | " CL_KEY "F1: Trợ giúp" RESET "\n");
+    printf("  " "\x1b[48;5;236m" CL_BORDER " Shortcut: " RESET " " CL_KEY "1-6: Chọn" RESET " | " CL_KEY "0: Thoát" RESET"\n");
     
     // Prompt nhập liệu
     printf("\n  " BOLD "Command" RESET " » " CL_LOGO);
@@ -81,9 +81,9 @@ void menuExactSearch(HashTable *vocabHT, HashTableK *kanjiHT) {
         printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
         printf(CL_BORDER "  │" RESET "  " BOLD "VUI LÒNG CHỌN PHẠM VI TÌM KIẾM" RESET "                            " CL_BORDER "│\n" RESET);
         printf(CL_BORDER "  ├──────┬─────────────────────────────────────────────────────┤\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "01" CL_BORDER "  │" RESET " ⛩️   Tra cứu Kanji (Mặt chữ / Hán Việt)               " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "01" CL_BORDER "  │" RESET " ⛩️   Tra cứu Kanji (Mặt chữ / Hán Việt)              " CL_BORDER "│\n" RESET);
         printf(CL_BORDER "  │  " CL_KEY "02" CL_BORDER "  │" RESET " 📖  Tra cứu Từ vựng (Nhật/Hira/Romaji/Việt)         " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "00" CL_BORDER "  │" RESET " ↩️   Quay lại Dashboard                               " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "00" CL_BORDER "  │" RESET " ↩️   Quay lại Dashboard                              " CL_BORDER "│\n" RESET);
         printf(CL_BORDER "  └──────┴─────────────────────────────────────────────────────┘\n" RESET);
         printf("\n  " BOLD "Lựa chọn của bạn" RESET " » " CL_KEY);
         if (scanf("%d", &choice) != 1) { while(getchar() != '\n'); continue; }
@@ -174,7 +174,7 @@ void menuFuzzySearch(KanjiList *L) {
         printf("\n  " CL_BORDER "Dashboard > Search > " RESET BOLD "FUZZY SEARCH (TÌM MỜ)" RESET "\n");
         printf(CL_BORDER "  " "────────────────────────────────────────────────────────────" "\n" RESET);
         printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-        printf(CL_BORDER "  │" RESET "  " BOLD "CHẾ ĐỘ TÌM KIẾM GẦN ĐÚNG (FUZZY)" RESET "                         " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │" RESET "  " BOLD "CHẾ ĐỘ TÌM KIẾM GẦN ĐÚNG (FUZZY)" RESET "                         " CL_BORDER " │\n" RESET);
         printf(CL_BORDER "  ├──────┬─────────────────────────────────────────────────────┤\n" RESET);
         printf(CL_BORDER "  │  " CL_KEY "01" CL_BORDER "  │" RESET " 🌫️   Khớp mờ mặt chữ Kanji                           " CL_BORDER "│\n" RESET);
         printf(CL_BORDER "  │  " CL_KEY "02" CL_BORDER "  │" RESET " 🍃  Khớp mờ cách đọc Hiragana                       " CL_BORDER "│\n" RESET);
@@ -220,10 +220,10 @@ void caseNo1(KanjiList *L, HashTable *vHT, HashTableK *kHT) {
         // 2. SEARCH MENU BOX
         // Mỗi dòng dưới đây đều được tính toán để viền phải │ nằm đúng cột 62
         printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-        printf(CL_BORDER "  │" RESET "  " BOLD "CHỌN PHƯƠNG THỨC TRA CỨU" RESET "                               " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │" RESET "  " BOLD "CHỌN PHƯƠNG THỨC TRA CỨU" RESET "                               " CL_BORDER "   │\n" RESET);
         printf(CL_BORDER "  ├──────┬─────────────────────────────────────────────────────┤\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "01" CL_BORDER "  │" RESET " 🎯  Exact Match (Tìm chính xác 100%%)               " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "02" CL_BORDER "  │" RESET " 🔍  Pattern Match (KMP - Tìm chuỗi con)            " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "01" CL_BORDER "  │" RESET " 🎯  Exact Match (Tìm chính xác 100%%)               " CL_BORDER " │\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "02" CL_BORDER "  │" RESET " 🔍  Pattern Match (KMP - Tìm chuỗi con)            " CL_BORDER " │\n" RESET);
         printf(CL_BORDER "  │  " CL_KEY "03" CL_BORDER "  │" RESET " 🌫️   Fuzzy Match (Tìm gần đúng)                      " CL_BORDER "│\n" RESET);
         printf(CL_BORDER "  │  " CL_KEY "00" CL_BORDER "  │" RESET " ↩️   Quay lại Menu chính                             " CL_BORDER "│\n" RESET);
         printf(CL_BORDER "  └──────┴─────────────────────────────────────────────────────┘\n" RESET);
@@ -267,7 +267,18 @@ void caseNo5(KanjiList *L) {
 void caseNo4(KanjiList *L) {
     analyzeJapaneseSentence(L);
 }
-
+void caseNo6(KanjiList *L) {
+    char keyword[256];
+    printf("\x1b[2J\x1b[H"); 
+    printf("\n  " CL_BORDER "Dashboard > " RESET BOLD "KANJI HỌ HÀNG" RESET "\n");
+    RadicalGraph graph = buildRadicalGraph(*L);
+    printf("\n  " CL_HIGHLIGHT " INPUT " RESET " Nhập bộ thủ (vd: 木, 亻, 氵): " CL_LOGO);
+    inputString(keyword, 256);
+    findRelatedKanjis(graph, *L, keyword);
+    freeRadicalGraph(&graph);
+    printf("\n  " CL_KEY "Nhấn Enter để quay lại..." RESET);
+    getchar();
+}
 void handleMenuSelection(char *rawJson) {
     int choice;
 
@@ -312,13 +323,7 @@ void handleMenuSelection(char *rawJson) {
                 caseNo5(&myData); //bai tap
                 break;
             case 6:
-                printf("Chuc nang 'Trac nghiem' dang duoc phat trien.\n");
-                break;
-            case 7:
-                printf("Chuc nang 'On tap tu sai' dang duoc phat trien.\n");
-                break;
-            case 8:
-                printf("Chuc nang 'Kanji ho hang' dang duoc phat trien.\n");
+                caseNo6(&myData);
                 break;
             case 0:
                 printf("Dang thoat chuong trinh...\n");
