@@ -1,3 +1,4 @@
+// ==================== src/parse_json_to_struct.c ====================
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,7 +10,6 @@
 #include "utils.h"
 #include "../lib/cJSON.h"
 #include "../data_structures.h"
-
 
 char* readFileToString(const char *fileName) {
     FILE *file = fopen(fileName, "rb");
@@ -31,19 +31,15 @@ char* readFileToString(const char *fileName) {
 void configUTF8() {
     #ifdef _WIN32
         system("chcp 65001 > nul");
-        
     #endif
-
 }
 
 char* safeStrdup(cJSON *item) {
     if (item && item->valuestring) {
         return strdup(item->valuestring);
     }
-    return strdup("");  // tránh NULL
+    return strdup("");
 }
-
-// ====================== PARSE ======================
 
 Yomi* parseYomi(cJSON *yomiArr, int *count) {
     if (!yomiArr || !cJSON_IsArray(yomiArr)) {
@@ -79,8 +75,6 @@ Sample* parseSamples(cJSON *samplesArr, int *count) {
     return samples;
 }
 
-
-
 Vocab* parseVocabs(cJSON *vocabsArr, int *count) {
     if (!vocabsArr || !cJSON_IsArray(vocabsArr)) {
         *count = 0;
@@ -99,11 +93,10 @@ Vocab* parseVocabs(cJSON *vocabsArr, int *count) {
         v->romaji   = safeStrdup(cJSON_GetObjectItem(item, "romaji"));
         v->meaning  = safeStrdup(cJSON_GetObjectItem(item, "meaning"));
 
-        // Chuyển đổi sang wchar_t để dùng cho Levenshtein
-        v->vocab_w = convertToWchar(v->vocab);
+        v->vocab_w   = convertToWchar(v->vocab);
         v->hiragana_w = convertToWchar(v->hiragana);
-        v->romaji_w = convertToWchar(v->romaji);
-        v->meaning_w = convertToWchar(v->meaning);
+        v->romaji_w   = convertToWchar(v->romaji);
+        v->meaning_w  = convertToWchar(v->meaning);
 
         v->samples = parseSamples(cJSON_GetObjectItem(item, "samples"), &v->samplesCount);
     }
@@ -114,7 +107,7 @@ KanjiList parseJsonToStruct(const char *jsonString) {
     KanjiList data = {NULL, 0};
     cJSON *root = cJSON_Parse(jsonString);
     if (!root) {
-        printf("Lỗi: Parse JSON thất bại!\n");
+        printf(CL_ERROR "  ⚠ Lỗi: Parse JSON thất bại!\n" RESET);
         return data;
     }
 
@@ -130,11 +123,11 @@ KanjiList parseJsonToStruct(const char *jsonString) {
         k->hanViet    = safeStrdup(cJSON_GetObjectItem(item, "hanViet"));
         k->radical    = safeStrdup(cJSON_GetObjectItem(item, "radical"));
         k->stroke     = safeStrdup(cJSON_GetObjectItem(item, "stroke"));
-        k->description= safeStrdup(cJSON_GetObjectItem(item, "description"));
+        k->description = safeStrdup(cJSON_GetObjectItem(item, "description"));
 
         k->on    = parseYomi(cJSON_GetObjectItem(item, "on"),    &k->onCount);
         k->kun   = parseYomi(cJSON_GetObjectItem(item, "kun"),   &k->kunCount);
-        k->vocabs= parseVocabs(cJSON_GetObjectItem(item, "vocabs"), &k->vocabsCount);
+        k->vocabs = parseVocabs(cJSON_GetObjectItem(item, "vocabs"), &k->vocabsCount);
         k->kanji_w = convertToWchar(k->kanji);
     }
 

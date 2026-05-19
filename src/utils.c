@@ -5,6 +5,8 @@
     #include <windows.h>
 #endif
 #include <wchar.h>
+#include <utils.h>
+// Hàm bổ trợ để chuyển đổi UTF-8 sang wchar_t 
 
 // Hàm bổ trợ để chuyển đổi UTF-8 sang wchar_t 
 wchar_t* convertToWchar(const char *source)
@@ -72,4 +74,21 @@ void inputString(char *buffer, int maxLength) {
         buffer[0] = '\0';
     }
 #endif
+}
+
+void clearScreen(void) {
+    printf("\x1b[2J\x1b[H");
+}
+
+void waitForEnter(void) {
+    printf("\n  " CL_DIM "▶ Nhấn Enter để tiếp tục..." RESET);
+    getchar();
+}
+
+
+void pauseAndClear(void) {
+    printf("\n\n  " CL_BORDER "────────────────────────────────────────────────────────────" RESET);
+    printf("\n  " BOLD "  [!] " RESET "Hệ thống đã sẵn sàng. Nhấn " BG_HIGHLIGHT " Enter " RESET " để tiếp tục...");
+    getchar();
+    printf("\x1b[2J\x1b[H");
 }
