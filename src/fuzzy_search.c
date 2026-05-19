@@ -69,12 +69,13 @@ void printFuzzyResult(int gap, Vocab *v) {
     printf("    " CL_KEY "🔍 %s" RESET "\n", v->meaning);
     printf(CL_BORDER "  ──────────────────────────────────────────────────\n" RESET);
 }
-
 void fuzzySearching(KanjiList *L, char *inputUTF8, int option) {
     wchar_t *wInput = convertToWchar(inputUTF8);
     int foundCount = 0;
     int i, j;
     int gap;
+    size_t inputLen = wcslen(wInput);
+
     for (i = 0; i < L->kanjiCount; i++) {
         for (j = 0; j < L->kanjis[i].vocabsCount; j++) {
             Vocab *v = &L->kanjis[i].vocabs[j];
@@ -105,7 +106,11 @@ void fuzzySearching(KanjiList *L, char *inputUTF8, int option) {
             }
 
             if (target_w != NULL) {
-                gap = levenshteinDistance(wInput, target_w);
+                size_t targetLen = wcslen(target_w);
+                // Chỉ tính khoảng cách nếu chênh lệch độ dài <= 3
+                if (abs((int)inputLen - (int)targetLen) < 3) {
+                    gap = levenshteinDistance(wInput, target_w);
+                }
             }
 
             if (gap <= MAX_GAP) {
@@ -117,5 +122,4 @@ void fuzzySearching(KanjiList *L, char *inputUTF8, int option) {
     if (foundCount == 0) {
         printf("Not Found!\n");
     }
-
 }
