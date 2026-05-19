@@ -11,6 +11,7 @@ gcc main.c ^
     src/filter_learned_lesson.c ^
     src/sentence_analysis.c ^
     src/radical_graph.c ^
+    src/prefix_search.c ^
     src/utils.c ^
     src/dashboard.c ^
     lib/cJSON.c ^

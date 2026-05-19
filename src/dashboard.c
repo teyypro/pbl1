@@ -13,6 +13,7 @@
 #include "filter_learned_lesson.h"
 #include "sentence_analysis.h"
 #include "parse_json_to_struct.h"
+#include "prefix_search.h"
 #include "utils.h"
 #include "../data_structures.h"
 #include "dashboard.h"
@@ -209,24 +210,77 @@ void menuFuzzySearch(KanjiList *L) {
     }
 }
 
-void caseNo1(KanjiList *L, HashTable *vHT, HashTableK *kHT) {
+void menuPrefixSearch(TrieNode *trieRoot) {
+    char keyword[256];
+    while (1) {
+        printf("\x1b[2J\x1b[H"); // Clear screen mượt mà bằng mã ANSI Escape
+        
+        // 1. HEADER & BREADCRUMB
+        printf("\n  " CL_BORDER "Dashboard > Tra cứu > " RESET BOLD "PREFIX SEARCH (TÌM THEO TIỀN TỐ)" RESET "\n");
+        printf(CL_BORDER "  ────────────────────────────────────────────────────────────" "\n" RESET);
+        
+        getchar(); // Đọc bỏ ký tự '\n'
+        printf(RESET);
+        
+        // 3. INPUT BAR
+        printf("\n  " CL_HIGHLIGHT " PREFIX INPUT " RESET "\n");
+        printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
+        printf(CL_BORDER "  │ " RESET "Nhập chuỗi ký tự bắt đầu (Ví dụ: 'ka', 'sh') " BOLD "⚡" RESET ": " CL_LOGO);
+        
+        // Dùng hàm inputString của bạn để hỗ trợ unicode/chuỗi dài mượt mà
+        inputString(keyword, 256);
+        printf(RESET CL_BORDER "  └────────────────────────────────────────────────────────────┘\n" RESET);
+        
+        printf("  " CL_TEXT "Cây Trie đang xử lý luồng dữ liệu..." RESET "\n");
+        
+        // 4. RESULTS VIEW PAGE
+        printf("\x1b[2J\x1b[H"); 
+        printf("\n  " CL_BORDER "Dashboard > Prefix Search > " RESET BOLD "RESULTS" RESET "\n");
+        printf(CL_BORDER "  ────────────────────────────────────────────────────────────" "\n" RESET);
+        printf("  " BOLD "Danh sách từ vựng bắt đầu bằng: " RESET "\"" CL_LOGO "%s" RESET "\"\n", keyword);
+        printf(CL_BORDER "  ────────────────────────────────────────────────────────────" "\n\n" RESET);
+        
+        TrieNode *matchNode = searchPrefixNode(trieRoot, keyword);
+        if (!matchNode) {
+            printf("  " CL_KEY "[!]" RESET " Không tồn tại từ vựng nào bắt đầu bằng từ khóa: \"" CL_HIGHLIGHT "%s" RESET "\"\n", keyword);
+        } else {
+            int resultCounter = 0;
+            printAllWordsFromNode(matchNode, &resultCounter);
+            if(resultCounter == 0) {
+                printf("  " CL_KEY "[!]" RESET " Không có kết quả nào phù hợp hoàn toàn.\n");
+            } else {
+                printf("\n  " CL_HIGHLIGHT " THÀNH CÔNG " RESET " Tìm thấy tổng cộng " BOLD "%d" RESET " kết quả phù hợp.\n", resultCounter);
+            }
+        }
+        
+        printf("\n  " CL_BORDER "────────────────────────────────────────────────────────────" RESET);
+        printf("\n  " CL_KEY "Nhấn Enter để thực hiện lượt tìm kiếm mới..." RESET);
+        getchar();
+    }
+}
+
+void caseNo1(KanjiList *L, HashTable *vHT, HashTableK *kHT, TrieNode *trieRoot) {
     int choice;
     while(1) {
         // Dùng ANSI để xóa màn hình cho mượt (không bị nháy như system("cls"))
         printf("\x1b[2J\x1b[H"); 
+        
         // 1. HEADER & BREADCRUMB
         printf("\n  " CL_BORDER "Dashboard > " RESET BOLD "HỆ THỐNG TÌM KIẾM" RESET "\n");
         printf(CL_BORDER "  ────────────────────────────────────────────────────────────" "\n" RESET);
+        
         // 2. SEARCH MENU BOX
-        // Mỗi dòng dưới đây đều được tính toán để viền phải │ nằm đúng cột 62
+        // Toàn bộ các dòng đã được căn chỉnh độ dài ký tự hiển thị để khít với khung viền
         printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-        printf(CL_BORDER "  │" RESET "  " BOLD "CHỌN PHƯƠNG THỨC TRA CỨU" RESET "                               " CL_BORDER "   │\n" RESET);
+        printf(CL_BORDER "  │" RESET "  " BOLD "CHỌN PHƯƠNG THỨC TRA CỨU" RESET "                                 " CL_BORDER "│\n" RESET);
         printf(CL_BORDER "  ├──────┬─────────────────────────────────────────────────────┤\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "01" CL_BORDER "  │" RESET " 🎯  Exact Match (Tìm chính xác 100%%)               " CL_BORDER " │\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "02" CL_BORDER "  │" RESET " 🔍  Pattern Match (KMP - Tìm chuỗi con)            " CL_BORDER " │\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "03" CL_BORDER "  │" RESET " 🌫️   Fuzzy Match (Tìm gần đúng)                      " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "00" CL_BORDER "  │" RESET " ↩️   Quay lại Menu chính                             " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "01" CL_BORDER "  │" RESET " 🎯  Exact Match (Tìm chính xác 100%%)                " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "02" CL_BORDER "  │" RESET " 🔍  Pattern Match (KMP - Tìm chuỗi con)              " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "03" CL_BORDER "  │" RESET " 🌫️  Fuzzy Match (Tìm gần đúng Levenshtein)          " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "04" CL_BORDER "  │" RESET " ⚡  Prefix Search (Gợi ý tiền tố cây Trie)          " CL_BORDER "│\n" RESET);
+        printf(CL_BORDER "  │  " CL_KEY "00" CL_BORDER "  │" RESET " ↩️  Quay lại Menu chính                              " CL_BORDER "│\n" RESET);
         printf(CL_BORDER "  └──────┴─────────────────────────────────────────────────────┘\n" RESET);
+        
         // 3. PROMPT NHẬP LIỆU
         printf("\n  " BOLD "Lựa chọn của bạn" RESET " » " CL_KEY);
         if (scanf("%d", &choice) != 1) { 
@@ -235,11 +289,13 @@ void caseNo1(KanjiList *L, HashTable *vHT, HashTableK *kHT) {
         }
         getchar(); // Đọc bỏ ký tự '\n' dư thừa
         printf(RESET);
+        
         if (choice == 0) break;
         switch (choice) {
             case 1: menuExactSearch(vHT, kHT); break;
             case 2: menuKMPSearch(L); break;
             case 3: menuFuzzySearch(L); break;
+            case 4: menuPrefixSearch(trieRoot); break; // Gọi giao diện tìm kiếm Trie
             default:
                 printf("\n  " "\x1b[31m" "(!) Lựa chọn không hợp lệ. Vui lòng chọn lại." RESET);
                 break;
@@ -282,12 +338,15 @@ void caseNo6(KanjiList *L) {
 void handleMenuSelection(char *rawJson) {
     int choice;
 
-
-    //printf("Debug: Đang parse JSON...\n");
+    // Phân tích cú pháp JSON
     KanjiList myData = parseJsonToStruct(rawJson);
 
+    // Khởi tạo các cấu trúc dữ liệu tra cứu siêu tốc
     HashTable *vocabHT = createHashTable(HASH_TABLE_SIZE);
     HashTableK *kanjiHT = createHashTableK(HASH_TABLE_SIZE);
+    
+    // --- KHỞI TẠO VÀ DỰNG CÂY TRIE TẠI ĐÂY ---
+    TrieNode *trieRoot = buildTrieFromKanjiList(&myData);
 
     buildHashTableForVocab(&myData, vocabHT);
     buildHashTableForKanji(&myData, kanjiHT);
@@ -304,7 +363,8 @@ void handleMenuSelection(char *rawJson) {
 
         switch (choice) {
             case 1: {
-                caseNo1(&myData, vocabHT, kanjiHT);
+                // Truyền thêm trieRoot vào caseNo1
+                caseNo1(&myData, vocabHT, kanjiHT, trieRoot);
                 break;
             }
             case 2:
@@ -320,13 +380,16 @@ void handleMenuSelection(char *rawJson) {
                 pauseAndClear();
                 break;
             case 5:
-                caseNo5(&myData); //bai tap
+                caseNo5(&myData); // bai tap
                 break;
             case 6:
                 caseNo6(&myData);
                 break;
             case 0:
                 printf("Dang thoat chuong trinh...\n");
+                // --- GIẢI PHÓNG BỘ NHỚ CÂY TRIE TRƯỚC KHI THOÁT ---
+                freeTrie(trieRoot);
+                // (Nếu có hàm free cho HashTable, bạn cũng nên gọi ở đây)
                 return;
             default:
                 printf("Lua chon khong hop le. Vui long chon lai.\n");
