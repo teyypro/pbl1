@@ -81,7 +81,7 @@ void clearScreen(void) {
 }
 
 void waitForEnter(void) {
-    printf("\n  " CL_DIM "▶ Nhấn Enter để tiếp tục..." RESET);
+    printf("\n  " CL_DIM ">> Nhấn Enter để tiếp tục..." RESET);
     getchar();
 }
 

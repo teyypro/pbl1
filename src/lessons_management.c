@@ -16,7 +16,7 @@ void displayAllLessons(KanjiList *L) {
     int i, j;
 
     printf("\n  " BG_HIGHLIGHT BOLD " DANH SÁCH BÀI HỌC TỔNG HỢP " RESET"\n");
-    printf(CL_BORDER "──────────────────────────────────────────────────────────────────\n" RESET);
+
 
     for (i = 0; i < totalLessons; i++) {
         int startIndex = i * KANJI_PER_LESSON;
@@ -31,7 +31,7 @@ void displayAllLessons(KanjiList *L) {
         }
         printf("\n");
     }
-    printf(CL_BORDER "──────────────────────────────────────────────────────────────────\n" RESET);
+    
 }
 
 void displayDetailedKanji(Kanji *k) {
@@ -121,7 +121,7 @@ void displayDetailedKanji(Kanji *k) {
         );
     }
 
-    printf(CL_BORDER "──────────────────────────────────────────────────────────────────\n" RESET);
+
     printf("  " CL_DIM ">> Nhấn Enter để quay lại..." RESET);
     getchar();
 }
@@ -148,7 +148,7 @@ void selectAndDisplayLesson(KanjiList *L) {
         system("cls || clear");
         
         printf("\n  " BG_HIGHLIGHT BOLD " BÀI %02d : DANH SÁCH KANJI " RESET "\n", lessonChoice);
-        printf(CL_BORDER "──────────────────────────────────────────────────────────────────\n" RESET);
+    
 
         for (int i = startIndex; i < endIndex; i++) {
             // Sắp đặt cột đối xứng: Cột chữ gốc (Hồng Neon) và Cột nghĩa chuyển ngữ (Tím) phân cách bằng vạch dọc mờ
@@ -156,7 +156,6 @@ void selectAndDisplayLesson(KanjiList *L) {
                    i + 1, L->kanjis[i].kanji, L->kanjis[i].hanViet);
         }
         
-        printf(CL_BORDER "──────────────────────────────────────────────────────────────────\n" RESET);
 
         int kanjiIdx;
         printf(CL_DIM ">> Nhập số thứ tự để xem chi tiết Kanji (0 để thoát):" RESET " " CL_LOGO BOLD);

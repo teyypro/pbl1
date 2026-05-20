@@ -191,7 +191,7 @@ void runMultipleChoiceTestKanji(KanjiMCList *list) {
     char tempBuf[32];
     
     printf("\n  " CL_PRIMARY "┃ " CL_SUCCESS "✔ Cấu hình hoàn tất! Nhập '0' ở bất kỳ câu nào để thoát." RESET);
-    printf("\n  " CL_PRIMARY "┃ ▶ Nhấn Enter để bắt đầu bài thi...");
+    printf("\n  " CL_PRIMARY "┃ >> Nhấn Enter để bắt đầu bài thi...");
     fgets(tempBuf, sizeof(tempBuf), stdin);
     
     while (totalCorrect < list->kanjiCount && !stop) {
@@ -272,7 +272,7 @@ void runMultipleChoiceTestKanji(KanjiMCList *list) {
             printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
             
             if (totalCorrect < list->kanjiCount && !stop) {
-                printf("\n  ▶ Nhấn Enter để tiếp tục...");
+                printf("\n  >> Nhấn Enter để tiếp tục...");
                 fgets(tempBuf, sizeof(tempBuf), stdin);
             }
         }
@@ -312,7 +312,7 @@ void runMultipleChoiceTestKanji(KanjiMCList *list) {
     printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
     
     free(correctFlags);
-    printf("\n  ▶ Nhấn Enter để quay lại Menu.");
+    printf("\n  >> Nhấn Enter để quay lại Menu.");
     fgets(tempBuf, sizeof(tempBuf), stdin);
 }
 
@@ -347,7 +347,7 @@ void runMultipleChoiceTestVocab(VocabMCList *list) {
     char tempBuf[32];
     
     printf("\n  " CL_PRIMARY "┃ " CL_SUCCESS "✔ Cấu hình hoàn tất!" RESET);
-    printf("\n  " CL_PRIMARY "┃ ▶ Nhấn Enter để bắt đầu...");
+    printf("\n  " CL_PRIMARY "┃ >> Nhấn Enter để bắt đầu...");
     fgets(tempBuf, sizeof(tempBuf), stdin);
     
     while (totalCorrect < list->vocabCount && !stop) {
@@ -429,7 +429,7 @@ void runMultipleChoiceTestVocab(VocabMCList *list) {
             printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
             
             if (totalCorrect < list->vocabCount && !stop) {
-                printf("\n  ▶ Nhấn Enter để tiếp tục...");
+                printf("\n  >> Nhấn Enter để tiếp tục...");
                 fgets(tempBuf, sizeof(tempBuf), stdin);
             }
         }
@@ -466,7 +466,7 @@ void runMultipleChoiceTestVocab(VocabMCList *list) {
     printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
     
     free(correctFlags);
-    printf("\n  ▶ Nhấn Enter để quay lại Menu.");
+    printf("\n  >> Nhấn Enter để quay lại Menu.");
     fgets(tempBuf, sizeof(tempBuf), stdin);
 }
 
@@ -619,7 +619,7 @@ void runMultipleChoiceWithKeyboardInput(void) {
     RawDataList *rawList = readDataFromKeyboard();
     char menuBuf[32];
     if (!rawList) {
-        printf("\n  ▶ Nhấn Enter để quay về...");
+        printf("\n  >> Nhấn Enter để quay về...");
         fgets(menuBuf, sizeof(menuBuf), stdin);
         return;
     }

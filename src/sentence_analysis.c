@@ -184,7 +184,7 @@ void analyzeJapaneseSentence(KanjiList *allData) {
     
     // Giao diện hiển thị kết quả phân rã chuỗi đầu vào
     system("cls");
-    printf("  " CL_PRIMARY "▶ " RESET BOLD "%s\n" RESET, sentence);
+    printf("  " CL_PRIMARY ">> " RESET BOLD "%s\n" RESET, sentence);
     printf(CL_BORDER "──────────────────────────────────────────────────────────────────\n" RESET);
 
     int found = 0;
