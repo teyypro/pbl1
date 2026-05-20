@@ -9,6 +9,10 @@
 
 #define ALPHABET_SIZE 28
 
+// ==================================================================
+// THÀNH PHẦN THUẬT TOÁN GỐC - GIỮ NGUYÊN VẸN KHÔNG THAY ĐỔI MỘT DÒNG CODE
+// ==================================================================
+
 TrieNode* createTrieNode() {
     TrieNode *node = (TrieNode*)malloc(sizeof(TrieNode));
     if (node) {
@@ -101,20 +105,20 @@ void freeTrie(TrieNode *root) {
 }
 
 void printVocabDetails(Vocab *v) {
-    printf(CL_BORDER "   ┌────────────────────────────────────────────────────────────┐\n" RESET);
-    printf(CL_BORDER "   │ " CL_LOGO "📖 %-42s " CL_BORDER "│\n" RESET, v->vocab ? v->vocab : "");
-    printf(CL_BORDER "   │ " CL_TEXT "💬 %-42s " CL_BORDER "│\n" RESET, v->hiragana ? v->hiragana : "");
-    printf(CL_BORDER "   │ " CL_KEY "🔍 %-42s " CL_BORDER "│\n" RESET, v->meaning ? v->meaning : "");
+    if (!v) return;
     
+    // Cấu trúc phân đoạn hiển thị các câu ví dụ thực tế tương thích mẫu lessons_management
     if (v->samplesCount > 0 && v->samples) {
-        printf(CL_BORDER "   ├────────────────────────────────────────────────────────────┤\n" RESET);
-        printf(CL_BORDER "   │ " CL_DIM "📌 Ví dụ:" CL_RESET "                                                 │\n" RESET);
         for (int i = 0; i < v->samplesCount && i < 2; i++) {
-            printf(CL_BORDER "   │   " CL_TEXT "・%s" CL_RESET "                                │\n", v->samples[i].jp);
-            printf(CL_BORDER "   │     → %s" CL_RESET "                              │\n", v->samples[i].vn);
+            printf("  " CL_PRIMARY "┃ " RESET " " CL_DIM "┆ " RESET CL_JP_SENT "%s\n" RESET, 
+                   v->samples[i].jp ? v->samples[i].jp : "");
+            printf("  " CL_PRIMARY "┃ " RESET " " CL_DIM "└─ " RESET CL_VN_SENT "%s\n" RESET, 
+                   v->samples[i].vn ? v->samples[i].vn : "");
         }
     }
-    printf(CL_BORDER "   └────────────────────────────────────────────────────────────┘\n" RESET);
+    
+    // Đường ngăn dòng mờ phân tách cấu trúc giữa từng phần mục từ vựng
+    printf("  " CL_PRIMARY "┃\n" RESET);
 }
 
 void printAllWordsFromNode(TrieNode *node, int *counter) {
@@ -123,8 +127,19 @@ void printAllWordsFromNode(TrieNode *node, int *counter) {
     if (node->isEndOfWord && node->vocabs) {
         for (int i = 0; i < node->vocabsCount; i++) {
             (*counter)++;
-            printf("\n  " CL_KEY "[%02d]" RESET, *counter);
-            printVocabDetails(node->vocabs[i]);
+            Vocab *v = node->vocabs[i];
+            
+            // Xây dựng dòng tiêu đề cột đối xứng phẳng (Flat symmetric columns row): [STT] [Chữ gốc] │ [Kana] │ [Romaji]
+            printf("  " CL_PRIMARY "┃ " RESET CL_LOGO BOLD "%02d. " RESET CL_KANJI BOLD "%s " RESET 
+                    CL_DIM "(" RESET CL_KANA "%s" RESET CL_DIM " • " RESET CL_ROMAJI "%s" RESET CL_DIM ")" RESET CL_MEANING "  %s\n" RESET , 
+                    *counter, 
+                    v->vocab, 
+                    v->hiragana, 
+                    v->romaji,
+                    v->meaning);
+            
+            // Gọi hàm in chi tiết nội dung ngữ nghĩa và các ví dụ đi kèm
+            printVocabDetails(v);
         }
     }
 

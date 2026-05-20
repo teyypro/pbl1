@@ -64,28 +64,47 @@ void buildHashTableForVocab(KanjiList *L, HashTable *ht) {
     }
 }
 
+
 void printOutVocab(Vocab *v) {
     if (v == NULL) return;
     
-    printf(CL_PRIMARY "╔════════════════════════════════════════════════════════════════════╗\n");
-    printf("║ " CL_LOGO BOLD "%-20s" CL_PRIMARY " │ " CL_TEXT "%-20s" CL_PRIMARY " │ " CL_TEXT "%-20s" CL_PRIMARY " ║\n", 
-           v->vocab ? v->vocab : "N/A", 
-           v->hiragana ? v->hiragana : "N/A", 
-           v->romaji ? v->romaji : "N/A");
-    printf(CL_PRIMARY "╠════════════════════════════════════════════════════════════════════╣\n");
-    printf("║ " CL_KEY "📖 Nghĩa: " CL_RESET "%-61s " CL_PRIMARY "║\n", v->meaning ? v->meaning : "N/A");
+    // Header vocab hiện đại, sử dụng cấu trúc phẳng kết hợp các trường dữ liệu màu sắc đồng bộ
+    printf(
+        "  " CL_PRIMARY "┃ " RESET
+        CL_KANJI BOLD "%s" RESET
+        "  " CL_DIM "(" RESET
+        CL_KANA "%s" RESET
+        CL_DIM " • " RESET
+        CL_ROMAJI "%s" RESET
+        CL_DIM ")" RESET
+        "  " CL_MEANING "%s\n",
+        v->vocab ? v->vocab : "-",
+        v->hiragana ? v->hiragana : "-",
+        v->romaji ? v->romaji : "-",
+        v->meaning ? v->meaning : "-"
+    );
     
+    // Khối câu ví dụ (Examples) sử dụng đường dẫn hướng mờ góc màn hình
     if (v->samplesCount > 0 && v->samples != NULL) {
-        printf(CL_PRIMARY "╠════════════════════════════════════════════════════════════════════╣\n");
-        printf(CL_PRIMARY "║ " CL_WARN "📌 Ví dụ:" CL_RESET "                                                              ║\n");
         for (int i = 0; i < v->samplesCount; i++) {
-            printf(CL_PRIMARY "║ " CL_TEXT "  • %s" CL_RESET "                                                   ║\n", 
-                   v->samples[i].jp ? v->samples[i].jp : "");
-            printf(CL_PRIMARY "║    → %s" CL_RESET "                                                 ║\n", 
-                   v->samples[i].vn ? v->samples[i].vn : "");
+            printf(
+                "  " CL_PRIMARY "┃    " RESET
+                CL_DIM "┆ " RESET
+                CL_JP_SENT "%s\n" RESET,
+                v->samples[i].jp ? v->samples[i].jp : ""
+            );
+
+            printf(
+                "  " CL_PRIMARY "┃    " RESET
+                CL_DIM "└─ " RESET
+                CL_VN_SENT "%s\n" RESET,
+                v->samples[i].vn ? v->samples[i].vn : ""
+            );
         }
     }
-    printf(CL_PRIMARY "╚════════════════════════════════════════════════════════════════════╝\n" RESET);
+    
+    // Khoảng trắng dòng mờ phân cách giữa các mục từ vựng kết quả
+    printf("  " CL_PRIMARY "┃\n" RESET);
 }
 
 void exactlySearching(HashTable *ht, char *key) {
@@ -104,6 +123,8 @@ void exactlySearching(HashTable *ht, char *key) {
     }
     
     if (!found) {
-        printf(CL_WARN "  ⚠ Không tìm thấy kết quả cho từ khóa: " CL_LOGO "%s\n" RESET, key);
+        printf("  " CL_WARN "⚠ Không tìm thấy kết quả cho từ khóa: " CL_LOGO "%s\n" RESET, key);
     }
+    
+
 }

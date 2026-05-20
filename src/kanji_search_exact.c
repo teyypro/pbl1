@@ -61,56 +61,80 @@ void buildHashTableForKanji(KanjiList *L, HashTableK *ht) {
     }
 }
 
+
 void printOutKanji(Kanji *k) {
     if (k == NULL) return;
 
-    printf(CL_PRIMARY "╔════════════════════════════════════════════════════════════════════╗\n");
-    printf("║ " CL_RESET BOLD " KANJI: %-10s " CL_PRIMARY "│" CL_RESET BOLD " HÁN VIỆT: %-12s " CL_PRIMARY "│" CL_RESET " STT: %-4d " CL_PRIMARY "║\n", 
-            k->kanji ? k->kanji : "N/A", 
-            k->hanViet ? k->hanViet : "N/A",
-            k->stt);
-    printf(CL_PRIMARY "╠════════════════════════════════════════════════════════════════════╣\n" CL_RESET);
+    // Giao diện tiêu đề phẳng với thanh định vị trực giác màu hệ thống
+    printf("  " CL_PRIMARY "┃ " CL_DIM "Kanji      :" RESET " " CL_KANJI BOLD "%s" RESET "\n", k->kanji ? k->kanji : "N/A");
+    printf("  " CL_PRIMARY "┃ " CL_DIM "Hán Việt   :" RESET " " CL_MEANING BOLD "%-15s" RESET " " CL_DIM "STT: %d\n" RESET, k->hanViet ? k->hanViet : "N/A", k->stt);
+    printf("  " CL_PRIMARY "┃ " CL_DIM "Bộ thủ     :" RESET " %-15s " CL_DIM "Số nét: %s\n" RESET, k->radical ? k->radical : "N/A", k->stroke ? k->stroke : "N/A");
+    printf("  " CL_PRIMARY "┃ " CL_DIM "Giải nghĩa :" RESET " %s\n", k->description ? k->description : "N/A");
+    
+    printf("  " CL_PRIMARY "┃\n");
 
-    printf(CL_TEXT "  ➤ " BOLD "Bộ thủ: " CL_RESET "%-15s" CL_TEXT " ➤ " BOLD "Số nét: " CL_RESET "%s\n", 
-            k->radical ? k->radical : "N/A", 
-            k->stroke ? k->stroke : "N/A");
+    // Khối phân rã cấu trúc âm đọc ON/KUN trực quan bằng token màu, tránh rối mắt
+    printf("  " CL_PRIMARY "┃ " CL_DIM "[Âm ON]  :" RESET " ");
+    if (k->onCount > 0) {
+        for (int i = 0; i < k->onCount; i++) {
+            printf(CL_KANJI BOLD "%s" RESET " " CL_KANA "(%s)" RESET "%s", k->on[i].jp, k->on[i].romaji, (i == k->onCount - 1) ? "" : ", ");
+        }
+    } else printf("N/A");
     
-    printf(CL_TEXT "  ➤ " BOLD "Giải nghĩa: " CL_RESET "%s\n", k->description ? k->description : "N/A");
+    printf("\n  " CL_PRIMARY "┃ " CL_DIM "[Âm KUN] :" RESET " ");
+    if (k->kunCount > 0) {
+        for (int i = 0; i < k->kunCount; i++) {
+            printf(CL_KANJI BOLD "%s" RESET " " CL_KANA "(%s)" RESET "%s", k->kun[i].jp, k->kun[i].romaji, (i == k->kunCount - 1) ? "" : ", ");
+        }
+    } else printf("N/A");
     
-    printf(CL_PRIMARY "  ╟────────────────────────────────────────────────────────────────────╢\n" CL_RESET);
+    printf("\n  " CL_PRIMARY "┃\n");
+    printf("  " CL_PRIMARY "┃ " CL_DIM "Từ vựng liên quan (%d):\n" RESET, k->vocabsCount);
     
-    printf(CL_WARN "  [Âm On] : " CL_RESET);
-    for(int i = 0; i < k->onCount; i++) {
-        printf(BOLD "%s" CL_RESET " (%s)%s", k->on[i].jp, k->on[i].romaji, (i == k->onCount - 1) ? "" : ", ");
-    }
-    printf(CL_WARN "\n  [Âm Kun]: " CL_RESET);
-    for(int i = 0; i < k->kunCount; i++) {
-        printf(BOLD "%s" CL_RESET " (%s)%s", k->kun[i].jp, k->kun[i].romaji, (i == k->kunCount - 1) ? "" : ", ");
-    }
-    
-    printf("\n" CL_PRIMARY "  ╟" BOLD "─── TỪ VỰNG LIÊN QUAN (%d từ) ─────────────────────────────────────╢" CL_RESET "\n", k->vocabsCount);
-    
+    // Đồng bộ cách sắp đặt cột đối xứng phẳng cho mục từ vựng liên quan và ví dụ mẫu
     if (k->vocabsCount > 0 && k->vocabs != NULL) {
         for (int i = 0; i < k->vocabsCount; i++) {
             Vocab *v = &k->vocabs[i];
-            printf("    " CL_SUCCESS "● " BOLD "%-15s" CL_RESET " " CL_TEXT "[%s - %s]" CL_RESET "\n", 
-                   v->vocab ? v->vocab : "N/A", 
-                   v->hiragana ? v->hiragana : "N/A", 
-                   v->romaji ? v->romaji : "N/A");
-            printf("      " CL_TEXT "└─ Ý nghĩa: " CL_RESET "%s\n", v->meaning ? v->meaning : "N/A");
             
+            printf(
+                "  " CL_PRIMARY "┃ " RESET
+                CL_DIM "%02d." RESET " "
+                CL_KANJI BOLD "%s" RESET
+                "  " CL_DIM "(" RESET
+                CL_KANA "%s" RESET
+                CL_DIM " • " RESET
+                CL_ROMAJI "%s" RESET
+                CL_DIM ")" RESET
+                "  " CL_MEANING "%s\n",
+                i + 1,
+                v->vocab,
+                v->hiragana ? v->hiragana : "-",
+                v->romaji ? v->romaji : "-",
+                v->meaning ? v->meaning : "-"
+            );
+
+            // In khối ví dụ tương đương đường trục phụ
             if (v->samplesCount > 0) {
                 for (int j = 0; j < v->samplesCount; j++) {
-                    printf("         " CL_WARN "↳ " CL_TEXT "Ex: " CL_RESET "%-25s " CL_TEXT "→ %s" CL_RESET "\n", 
-                           v->samples[j].jp, v->samples[j].vn);
+                    printf(
+                        "  " CL_PRIMARY "┃    " RESET
+                        CL_DIM "┆ " RESET
+                        CL_JP_SENT "%s\n" RESET,
+                        v->samples[j].jp
+                    );
+                    printf(
+                        "  " CL_PRIMARY "┃    " RESET
+                        CL_DIM "└─ " RESET
+                        CL_VN_SENT "%s\n" RESET,
+                        v->samples[j].vn
+                    );
                 }
             }
-            if (i < k->vocabsCount - 1) printf("\n");
+            printf("\n");
         }
     } else {
-        printf(CL_TEXT "    (Hiện không có từ vựng đi kèm)\n" CL_RESET);
+        printf("  " CL_PRIMARY "┃ " RESET CL_DIM "(Hiện không có từ vựng đi kèm)\n" RESET);
     }
-    printf(CL_PRIMARY "╚════════════════════════════════════════════════════════════════════╝\n" CL_RESET);
 }
 
 void exactlySearchingKanji(HashTableK *ht, char *key) {
@@ -118,17 +142,20 @@ void exactlySearchingKanji(HashTableK *ht, char *key) {
     
     int index = hashGetIndex(key, ht->size);
     HashNodeK *current = ht->table[index];
-    int found = 0;
     
+    
+    int found = 0;
     while (current != NULL) {
         if (strcmp(current->key, key) == 0) {
             printOutKanji(current->kanji);
             found = 1;
+            
         }
         current = current->next;
     }
     
     if (!found) {
-        printf(CL_WARN "  ⚠ Không tìm thấy kết quả Kanji cho: " CL_LOGO "%s\n" RESET, key);
+        printf("  " CL_WARN "⚠ Không tìm thấy kết quả Kanji cho: " CL_LOGO "%s\n" RESET, key);
     }
+    
 }

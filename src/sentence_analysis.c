@@ -76,69 +76,100 @@ void freeKanjiHashTable(KanjiHashTable* table) {
 
 void printOutKanjiInfo(Kanji* info) {
     if (!info) {
-        printf(CL_WARN "\n  ⚠ Không có thông tin Kanji.\n" RESET);
+        printf("\n  " CL_WARN "⚠ Không có thông tin Kanji.\n" RESET);
         return;
     }
     
-    printf("\n  " BG_HIGHLIGHT " KANJI INFO " RESET "\n");
-    printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-    printf(CL_BORDER "  │ " RESET "Chữ: " CL_LOGO BOLD "%-10s" RESET 
-           " Hán Việt: " CL_KEY BOLD "%-28s" RESET CL_BORDER "│\n" RESET, 
-           info->kanji, (info->hanViet ? info->hanViet : "?"));
-    printf(CL_BORDER "  │ " RESET "Số thứ tự: " CL_TEXT "%-49d" RESET CL_BORDER "│\n" RESET, info->stt);
-    printf(CL_BORDER "  ├────────────────────────────────────────────────────────────┤\n" RESET);
-    printf(CL_BORDER "  │ " RESET BOLD "Giải nghĩa: " RESET "                                               " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  │ " RESET CL_TEXT "%-58s" RESET CL_BORDER " │\n" RESET, 
-           (info->description ? info->description : "Chưa có mô tả."));
-    printf(CL_BORDER "  ├────────────────────────────────────────────────────────────┤\n" RESET);
+    // Giao diện tiêu đề phẳng với các thông số phân bổ cột đối xứng
+    printf("  " CL_PRIMARY "┃ " CL_DIM "Kanji      :" RESET " " CL_KANJI BOLD "%s" RESET "  " CL_DIM "—" RESET "  " CL_MEANING BOLD "%s" RESET "  " CL_DIM "(STT: %d)" RESET "\n", 
+           info->kanji ? info->kanji : "N/A", 
+           info->hanViet ? info->hanViet : "N/A", 
+           info->stt);
+    printf("  " CL_PRIMARY "┃ " CL_DIM "Bộ thủ     :" RESET " %-15s " CL_DIM "Số nét: %s\n" RESET, 
+           info->radical ? info->radical : "N/A", 
+           info->stroke ? info->stroke : "N/A");
+    printf("  " CL_PRIMARY "┃ " CL_DIM "Giải nghĩa :" RESET " " CL_TEXT "%s\n", 
+           info->description ? info->description : "Chưa có mô tả.");
     
-    if (info->vocabsCount > 0) {
-        printf(CL_BORDER "  │ " RESET BOLD "Từ vựng liên quan (" CL_KEY "%d" RESET BOLD "):" RESET "                                │\n" RESET, info->vocabsCount);
-        for (int j = 0; j < info->vocabsCount && j < 4; j++) {
-            Vocab* v = &info->vocabs[j];
-            printf(CL_BORDER "  │ " RESET "  " CL_LOGO "• " RESET BOLD "%-12s" RESET 
-                   CL_DIM "(" RESET "%-14s" CL_DIM ")" RESET " : %-18s " CL_BORDER "│\n" RESET,
-                   (v->vocab ? v->vocab : "?"), 
-                   (v->hiragana ? v->hiragana : "?"), 
-                   (v->meaning ? v->meaning : "?"));
+    printf("  " CL_PRIMARY "┃\n");
+
+    // Khối phân rã cấu trúc âm đọc ON/KUN trực quan bằng token màu sắc đồng bộ
+    printf("  " CL_PRIMARY "┃ " CL_DIM "[Âm ON]  :" RESET " ");
+    if (info->onCount > 0) {
+        for (int i = 0; i < info->onCount; i++) {
+            printf(CL_KANJI BOLD "%s" RESET " " CL_KANA "(%s)" RESET "%s", info->on[i].jp, info->on[i].romaji, (i == info->onCount - 1) ? "" : ", ");
         }
-        if (info->vocabsCount > 4) {
-            printf(CL_BORDER "  │ " RESET "  " CL_DIM "... và %d từ vựng khác" RESET "                              " CL_BORDER "│\n" RESET, info->vocabsCount - 4);
+    } else printf("N/A");
+    
+    printf("\n  " CL_PRIMARY "┃ " CL_DIM "[Âm KUN] :" RESET " ");
+    if (info->kunCount > 0) {
+        for (int i = 0; i < info->kunCount; i++) {
+            printf(CL_KANJI BOLD "%s" RESET " " CL_KANA "(%s)" RESET "%s", info->kun[i].jp, info->kun[i].romaji, (i == info->kunCount - 1) ? "" : ", ");
+        }
+    } else printf("N/A");
+    
+    printf("\n  " CL_PRIMARY "┃\n");
+    printf("  " CL_PRIMARY "┃ " CL_DIM "Từ vựng liên quan (%d):\n" RESET, info->vocabsCount);
+    
+    // Đồng bộ cách sắp xếp cấu trúc phẳng cho các từ vựng và câu ví dụ liên đới
+    if (info->vocabsCount > 0 && info->vocabs != NULL) {
+        for (int j = 0; j < info->vocabsCount; j++) {
+            Vocab* v = &info->vocabs[j];
+            
+            printf(
+                "  " CL_PRIMARY "┃ " RESET
+                CL_DIM "%02d." RESET " "
+                CL_KANJI BOLD "%s" RESET
+                "  " CL_DIM "(" RESET
+                CL_KANA "%s" RESET
+                CL_DIM " • " RESET
+                CL_ROMAJI "%s" RESET
+                CL_DIM ")" RESET
+                "  " CL_MEANING "%s\n",
+                j + 1,
+                v->vocab ? v->vocab : "?", 
+                v->hiragana ? v->hiragana : "?", 
+                v->romaji ? v->romaji : "?",
+                v->meaning ? v->meaning : "?"
+            );
+
         }
     } else {
-        printf(CL_BORDER "  │ " RESET "  " CL_DIM "(Không có từ vựng liên quan)" RESET "                        " CL_BORDER "│\n" RESET);
+        printf("  " CL_PRIMARY "┃ " RESET CL_DIM "    (Hệ thống chưa nạp từ vựng liên đới)\n" RESET);
+        printf("  " CL_PRIMARY "┃\n" RESET);
     }
-    printf(CL_BORDER "  └────────────────────────────────────────────────────────────┘\n" RESET);
+    printf("\n");
 }
 
 void analyzeJapaneseSentence(KanjiList *allData) {
     clearScreen();
     
     if (!allData || allData->kanjiCount == 0) {
-        printf(CL_ERROR "  ⚠ Chưa có dữ liệu kanji!\n" RESET);
+        printf("\n  " CL_ERROR "🚨 [HỆ THỐNG] Phân vùng bộ nhớ trống. Chưa nạp cơ sở dữ liệu Kanji.\n" RESET);
         waitForEnter();
         return;
     }
 
     KanjiHashTable* kanjiTable = createKanjiHashTable(allData);
     if (!kanjiTable) {
-        printf(CL_ERROR "  ⚠ Lỗi tạo bảng băm kanji!\n" RESET);
+        printf("\n  " CL_ERROR "🚨 [HỆ THỐNG] Lỗi nghiêm trọng: Phân bổ thực thể bảng băm (Heap Allocation) thất bại.\n" RESET);
         return;
     }
 
     char sentence[MAX_SENTENCE];
 
-    printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-    printf(CL_BORDER "  │" BG_HIGHLIGHT "                    PHÂN TÍCH CÂU TIẾNG NHẬT                    " RESET CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  └────────────────────────────────────────────────────────────┘\n\n" RESET);
+    // Tiêu đề bảng đồng bộ với cấu trúc thiết kế của dashboard bài học tổng hợp
+    printf("\n  " BG_HIGHLIGHT BOLD "  TRA CỨU KANJI TRONG CÂU " RESET "\n");
+    printf(CL_BORDER "──────────────────────────────────────────────────────────────────\n" RESET);
     
-    printf(CL_TEXT "  📝 Nhập câu tiếng Nhật cần phân tích:\n" RESET);
-    printf("  " CL_LOGO);
+    printf("  " CL_TEXT "Hãy nhập câu cần phân tích các Kanji trong đó:\n" RESET);
+    printf(CL_LOGO BOLD "  " RESET CL_LOGO BOLD);
     
     inputString(sentence, MAX_SENTENCE);
+    printf(RESET);
     
     if (strlen(sentence) == 0) {
-        printf(CL_WARN "\n  ⚠ Bạn chưa nhập câu nào!\n" RESET);
+        printf("\n  " CL_WARN "⚠ [CẢNH BÁO] Chuỗi rỗng. Tiến trình phân rã bị hủy bỏ bởi người dùng.\n" RESET);
         freeKanjiHashTable(kanjiTable);
         waitForEnter();
         return;
@@ -146,15 +177,15 @@ void analyzeJapaneseSentence(KanjiList *allData) {
 
     wchar_t* wsentence = convertToWchar(sentence);
     if (!wsentence) {
-        printf(CL_ERROR "  ⚠ Lỗi chuyển đổi UTF-8 sang wchar_t!\n" RESET);
+        printf("\n  " CL_ERROR "🚨 [LỖI MÃ HÓA] Không thể chuyển đổi UTF-8 sang bộ ký tự rộng wchar_t.\n" RESET);
         freeKanjiHashTable(kanjiTable);
         return;
     }
-
-    printf("\n  " CL_PRIMARY "📖 KẾT QUẢ PHÂN TÍCH\n" RESET);
-    printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-    printf(CL_BORDER "  │ " CL_HEADER "Câu gốc:" CL_RESET " %-53s " CL_BORDER "│\n" RESET, sentence);
-    printf(CL_BORDER "  └────────────────────────────────────────────────────────────┘\n" RESET);
+    
+    // Giao diện hiển thị kết quả phân rã chuỗi đầu vào
+    system("cls");
+    printf("  " CL_PRIMARY "▶ " RESET BOLD "%s\n" RESET, sentence);
+    printf(CL_BORDER "──────────────────────────────────────────────────────────────────\n" RESET);
 
     int found = 0;
     for (int i = 0; wsentence[i] != L'\0'; i++) {
@@ -169,8 +200,10 @@ void analyzeJapaneseSentence(KanjiList *allData) {
     }
 
     if (!found) {
-        printf(CL_WARN "\n  ⚠ Trong câu này không tìm thấy Kanji nào trong dữ liệu.\n" RESET);
+        printf("  " CL_WARN "⚠ Không tìm thấy phần tử Kanji nào thuộc phạm vi dữ liệu đã học trong câu trên.\n" RESET);
     }
+
+    printf(CL_BORDER "──────────────────────────────────────────────────────────────────\n" RESET);
 
     free(wsentence);
     freeKanjiHashTable(kanjiTable);

@@ -21,76 +21,130 @@
 
 
 void displayMenu(void) {
-    printf(CL_LOGO BOLD);
-    printf("    _  _              _ _   __ _      \n");
-    printf("   | |/ /            (|) | _ \\(_)     \n");
-    printf("   | ' <  _ _ _ _  _ _   |  _/ | |     \n");
-    printf("   | |\\_\\/ ` | ' \\| | |  |_|   |_|     \n");
-    printf("   |_| \\_\\__,_|_| |_| |_|" RESET "  Dictionary " CL_LOGO "v3.0\n" RESET);
-    printf(CL_LOGO "                   |__/                  \n\n" RESET);
+    // 1. TIÊU ĐỀ HỆ THỐNG (Căn chỉnh khoảng trống lý tưởng, tối giản thanh lịch)
+    printf("\n");
+    printf("  " BG_HIGHLIGHT BOLD "  TỪ ĐIỂN 512 KANJILOOK&LEARN  " RESET);
+    printf("  " CL_DIM "│  ##" RESET "\n");
+    printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
 
-    printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-    printf(CL_BORDER "  │" BG_HIGHLIGHT " DASHBOARD " RESET "  History    Favorites    Settings    Help       " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  ├──────┬─────────────────────────────────────────────────────┤\n" RESET);
+    // 2. DANH SÁCH TÁC VỤ (Cấu trúc Flat-List đối xứng cao độ)
+    // Tách riêng Emoji ra ngoài chuỗi %s để đảm bảo độ rộng cột %-35s chính xác 100%
+    printf("  " CL_PRIMARY "┃ " CL_DIM "%-6s" CL_HEADER BOLD "%-35s" RESET "\n", "STT", "CÁC CHỨC NĂNG");
+    printf("  " CL_PRIMARY "┃ " CL_BORDER "────────────────────────────────────────────────────────────────" RESET "\n");
 
-    printf(CL_BORDER "  │ " RESET BOLD "MENU" CL_BORDER " │" RESET "                                                     " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  │  " CL_KEY "01" CL_BORDER "  │" RESET " 🔍 Tìm kiếm (Chính xác / KMP / Tìm mờ / Prefix)              " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  │  " CL_KEY "02" CL_BORDER "  │" RESET " 📁 Quản lý từ điển cá nhân                          " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  │  " CL_KEY "03" CL_BORDER "  │" RESET " 📑 Lọc từ vựng đã học                               " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  │  " CL_KEY "04" CL_BORDER "  │" RESET " 🧠 Phân tích câu (Parser)                           " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  │  " CL_KEY "05" CL_BORDER "  │" RESET " 📝 Bài tập hàng ngày                                " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  ├──────┴─────────────────────────────────────────────────────┤\n" RESET);
-    printf(CL_BORDER "  │" RESET "      " BOLD CL_ERROR "[0] THOÁT CHƯƠNG TRÌNH" RESET "                                " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  └────────────────────────────────────────────────────────────┘\n" RESET);
+    // Chức năng 01
+    printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "01" RESET "  │  🔍  " CL_TEXT "%-35s" RESET "\n", 
+           "Tìm kiếm, tra cứu từ vựng nâng cao");
+    
+    // Chức năng 02
+    printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "02" RESET "  │  📁  " CL_TEXT "%-35s" RESET "\n", 
+           "Quản lý danh mục từ điển");
+    
+    // Chức năng 03
+    printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "03" RESET "  │  📑  " CL_TEXT "%-35s" RESET "\n", 
+           "Lọc từ vựng thông minh");
+    
+    // Chức năng 04
+    printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "04" RESET "  │  🧠  " CL_TEXT "%-35s" RESET "\n", 
+           "Phân tích Hán tự trong câu");
+    
+    // Chức năng 05
+    printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "05" RESET "  │  📝  " CL_TEXT "%-35s" RESET "\n", 
+           "Luyện tập trắc nghiệm");
 
-    printf("  " BG_MENU CL_BORDER " Shortcut: " RESET " " CL_KEY "1-5: Chọn" RESET " | " CL_KEY "0: Thoát" RESET "\n");
-    printf("\n  " BOLD "Command" RESET " » " CL_LOGO);
+    // Phân tách hệ thống
+    printf("  " CL_PRIMARY "┃ " CL_BORDER "────────────────────────────────────────────────────────────────" RESET "\n");
+    
+    // Lệnh thoát (Thiết kế đồng bộ cấu trúc với các dòng trên)
+    printf("  " CL_ERROR "┃ " CL_ERROR BOLD "00" RESET "  │  ❌  " CL_ERROR BOLD "%-35s" RESET "\n", 
+           "THOÁT CHƯƠNG TRÌNH");
+    
+    //printf("  " CL_PRIMARY "┃" RESET "\n");
+
+    // 3. THANH TRẠNG THÁI VÀ KHU VỰC NHẬP LỆNH (COMMAND PROMPT)
+    printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
+    printf("  " CL_DIM "Hướng dẫn:" RESET " Chọn số [" CL_PRIMARY "1-5" RESET "] để khởi chạy chức năng " CL_DIM "│" RESET " Chọn [" CL_ERROR "0" RESET "] để thoát\n");
+    printf("  " BOLD "Lựa chọn của bạn" RESET " " CL_PRIMARY "» " RESET);
 }
 
 void menuExactSearch(HashTable *vocabHT, HashTableK *kanjiHT) {
     int choice;
     char keyword[256];
     while (1) {
+        // Xóa màn hình và đưa con trỏ về góc trên bên trái
         printf("\x1b[2J\x1b[H");
-        printf("\n  " CL_BORDER "Dashboard > " RESET BOLD "EXACT SEARCH" RESET "\n");
-        printf(CL_BORDER "  ────────────────────────────────────────────────────────────\n" RESET);
-        printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-        printf(CL_BORDER "  │" RESET "  " BOLD "VUI LÒNG CHỌN PHẠM VI TÌM KIẾM" RESET "                            " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  ├──────┬─────────────────────────────────────────────────────┤\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "01" CL_BORDER "  │" RESET " ⛩️   Tra cứu Kanji (Mặt chữ / Hán Việt)              " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "02" CL_BORDER "  │" RESET " 📖  Tra cứu Từ vựng (Nhật/Hira/Romaji/Việt)         " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "00" CL_BORDER "  │" RESET " ↩️   Quay lại Dashboard                              " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  └──────┴─────────────────────────────────────────────────────┘\n" RESET);
-        printf("\n  " BOLD "Lựa chọn của bạn" RESET " » " CL_KEY);
         
-        if (scanf("%d", &choice) != 1) { while(getchar() != '\n'); continue; }
-        getchar();
+        // 1. THANH DIỀU HƯỚNG SUB-HEADER
+        printf("\n");
+        printf("  " BG_HIGHLIGHT BOLD "  Tra cứu dữ liệu chính xác (HashTable)  " RESET);
+        printf("\n\n");
+        // 2. DANH SÁCH PHẠM VI TRA CỨU (Cấu trúc Flat-List đồng bộ)
+        printf("  " CL_PRIMARY "┃ " CL_DIM "%-6s" CL_HEADER BOLD "%-35s" RESET "\n", "STT", "PHẠM VI DỮ LIỆU TRA CỨU");
+        printf("  " CL_PRIMARY "┃ " CL_BORDER "──────────────────────────────────────────────────────────────" RESET "\n");
+
+        // Chức năng 01
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "01" RESET "  │  ⛩️   " CL_TEXT "%-35s" RESET "\n", 
+               "Tra cứu Kanji (Kí tự / Hán Việt)");
+        
+        // Chức năng 02
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "02" RESET "  │  📖  " CL_TEXT "%-35s" RESET "\n", 
+               "Tra cứu Từ vựng (Kanji / Hiragana / Katakana / Romaji / Tiếng Việt)");
+
+        // Phân tách hệ thống
+        printf("  " CL_PRIMARY "┃ " CL_BORDER "──────────────────────────────────────────────────────────────" RESET "\n");
+        
+        // Lệnh quay lại
+        printf("  " CL_PRIMARY "┃ " CL_DIM BOLD "00" RESET "  │  ↩️   " CL_DIM "%-35s" RESET "\n", 
+               "Quay lại Menu tìm kiếm");
+        
+        printf("  " CL_PRIMARY "┃" RESET "\n");
+        
+        // 3. THANH TRẠNG THÁI VÀ DÒNG LỆNH CHỌN CHỨC NĂNG
+        printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
+        printf("  " CL_DIM "Hướng dẫn:" RESET " Chọn số [" CL_PRIMARY "1-2" RESET "] để xác định phạm vi " CL_DIM "│" RESET " Chọn [" CL_ERROR "0" RESET "] để quay lại\n");
+        printf("  " BOLD "Lựa chọn của bạn" RESET " " CL_PRIMARY "» " RESET CL_KEY);
+        
+        if (scanf("%d", &choice) != 1) { 
+            while(getchar() != '\n'); 
+            continue; 
+        }
+        getchar(); // Đọc ký tự newline thừa trong bộ đệm
         printf(RESET);
+        
         if (choice == 0) break;
-        
-        printf("\n  " BG_HIGHLIGHT " SEARCH BAR " RESET "\n");
-        printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-        printf(CL_BORDER "  │ " RESET "Nhập từ khóa chính xác " BOLD "🔍" RESET ": " CL_LOGO);
-        inputString(keyword, 256);
-        printf(RESET CL_BORDER "  └────────────────────────────────────────────────────────────┘\n" RESET);
-        printf("  " CL_TEXT "Đang truy xuất dữ liệu... " RESET "\n");
-        
-        printf("\x1b[2J\x1b[H"); 
-        printf("\n  " CL_BORDER "Dashboard > Exact Search > " RESET BOLD "RESULTS" RESET "\n");
-        printf(CL_BORDER "  ────────────────────────────────────────────────────────────\n" RESET);
-        printf("  " BOLD "Kết quả cho: " RESET "\"" CL_LOGO "%s" RESET "\"\n", keyword);
-        printf(CL_BORDER "  ────────────────────────────────────────────────────────────\n\n" RESET);
-        
-        if (choice == 1) {
-            exactlySearchingKanji(kanjiHT, keyword);
-        } else if (choice == 2) {
-            exactlySearching(vocabHT, keyword);
-        } else {
-            printf("  " CL_LOGO " [!] " RESET "Lựa chọn không hợp lệ.\n");
+        if (choice != 1 && choice != 2) {
+            printf("\n  " CL_ERROR "🚨 [LỖI]: Phạm vi chọn không hợp lệ. Vui lòng thử lại!" RESET "\n");
+            printf("\n  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
+            printf("  " CL_DIM "➔ Nhấn " CL_PRIMARY "Enter" CL_DIM " để tiếp tục..." RESET);
+            getchar();
+            continue;
         }
         
-        printf("\n  " CL_BORDER "────────────────────────────────────────────────────────────" RESET);
-        printf("\n  " CL_KEY "Nhấn Enter để tiếp tục..." RESET);
+        // 4. KHU VỰC NHẬP TỪ KHÓA (Giao diện SEARCH BAR phẳng, hiện đại)
+        printf("\n");
+        printf("  " CL_BORDER ">>> Nhập từ khóa: " RESET CL_LOGO BOLD);
+        
+        inputString(keyword, 256);
+        printf(RESET);
+    
+        
+        // 5. TRANG HIỂN THỊ KẾT QUẢ (RESULTS PAGE)
+        printf("\x1b[2J\x1b[H"); 
+        printf("\n");
+        printf("  " BG_HIGHLIGHT BOLD "  KẾT QUẢ TRA CỨU DỮ LIỆU  " RESET);
+        printf("  " CL_DIM "Từ khóa:" RESET " \"" CL_LOGO BOLD "%s" RESET "\"\n", keyword);
+        printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n\n");
+        
+        // Gọi hàm xử lý logic tìm kiếm core
+        if (choice == 1) {
+            exactlySearchingKanji(kanjiHT, keyword);
+        } else {
+            exactlySearching(vocabHT, keyword);
+        }
+        
+        // Thanh footer dừng xem kết quả
+        printf("\n  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
+        printf("  " CL_DIM "➔ Nhấn " CL_PRIMARY "Enter" CL_DIM " để tiếp tục ..." RESET);
         getchar();
     }
 }
@@ -99,87 +153,168 @@ void menuKMPSearch(KanjiList *L) {
     int option;
     char keyword[256];
     while (1) {
+        // Xóa màn hình và đưa con trỏ về góc trên bên trái
         printf("\x1b[2J\x1b[H");
-        printf("\n  " CL_BORDER "Dashboard > Search > " RESET BOLD "PATTERN MATCHING (KMP)" RESET "\n");
-        printf(CL_BORDER "  ────────────────────────────────────────────────────────────\n" RESET);
-        printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-        printf(CL_BORDER "  │" RESET "  " BOLD "CHẾ ĐỘ KHỚP MẪU THÔNG MINH (KMP)" RESET "                         " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  ├──────┬─────────────────────────────────────────────────────┤\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "01" CL_BORDER "  │" RESET " ⛩️   Khớp theo mặt chữ Kanji                         " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "02" CL_BORDER "  │" RESET " 🎋  Khớp theo cách đọc Hiragana                     " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "03" CL_BORDER "  │" RESET " 🔡  Khớp theo phiên âm Romaji                       " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "04" CL_BORDER "  │" RESET " 🇻🇳  Khớp theo nghĩa Tiếng Việt                      " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "00" CL_BORDER "  │" RESET " ↩️   Quay lại                                        " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  └──────┴─────────────────────────────────────────────────────┘\n" RESET);
-        printf("\n  " BOLD "Chọn chế độ [0-4]" RESET " » " CL_KEY);
         
-        if (scanf("%d", &option) != 1) { while(getchar() != '\n'); continue; }
-        getchar();
+        // 1. THANH DIỀU HƯỚNG SUB-HEADER
+        printf("\n");
+        printf("  " BG_HIGHLIGHT BOLD "  Khớp mẫu phân đoạn chuỗi con (KMP Algorithm)  " RESET);
+        printf("\n\n");
+        // 2. DANH SÁCH CHẾ ĐỘ KHỚP MẪU (Cấu trúc Flat-List đồng bộ)
+        printf("  " CL_PRIMARY "┃ " CL_DIM "%-6s" CL_HEADER BOLD "%-35s" RESET "\n", "STT", "CHẾ ĐỘ KHỚP MẪU");
+        printf("  " CL_PRIMARY "┃ " CL_BORDER "──────────────────────────────────────────────────────────────" RESET "\n");
+
+        // Chức năng 01
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "01" RESET "  │  ⛩️   " CL_TEXT "%-35s" RESET "\n", 
+               "Khớp theo mặt chữ Kanji");
+        
+        // Chức năng 02
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "02" RESET "  │  🎋  " CL_TEXT "%-35s" RESET "\n", 
+               "Khớp theo cách đọc Hiragana");
+        
+        // Chức năng 03
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "03" RESET "  │  🔡  " CL_TEXT "%-35s" RESET "\n", 
+               "Khớp theo phiên âm Romaji");
+        
+        // Chức năng 04
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "04" RESET "  │  🇻🇳  " CL_TEXT "%-35s" RESET "\n", 
+               "Khớp theo nghĩa Tiếng Việt");
+
+        // Phân tách hệ thống
+        printf("  " CL_PRIMARY "┃ " CL_BORDER "──────────────────────────────────────────────────────────────" RESET "\n");
+        
+        // Lệnh quay lại
+        printf("  " CL_PRIMARY "┃ " CL_DIM BOLD "00" RESET "  │  ↩️   " CL_DIM "%-35s" RESET "\n", 
+               "Quay lại Menu tìm kiếm");
+        
+        printf("  " CL_PRIMARY "┃" RESET "\n");
+        
+        // 3. THANH TRẠNG THÁI VÀ DÒNG LỆNH CHỌN CHẾ ĐỘ
+        printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
+        printf("  " CL_DIM "Hướng dẫn:" RESET " Chọn số [" CL_PRIMARY "1-4" RESET "] để xác định chế độ " CL_DIM "│" RESET " Chọn [" CL_ERROR "0" RESET "] để quay lại\n");
+        printf("  " BOLD "Lựa chọn của bạn" RESET " " CL_PRIMARY "» " RESET CL_KEY);
+        
+        if (scanf("%d", &option) != 1) { 
+            while(getchar() != '\n'); 
+            continue; 
+        }
+        getchar(); // Đọc ký tự newline thừa trong bộ đệm
         printf(RESET);
+        
         if (option == 0) break;
-        if (option < 1 || option > 4) continue;
+        if (option < 1 || option > 4) {
+            printf("\n  " CL_ERROR "🚨 [LỖI]: Chế độ chọn không hợp lệ. Vui lòng thử lại!" RESET "\n");
+            printf("\n  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
+            printf("  " CL_DIM "➔ Nhấn " CL_PRIMARY "Enter" CL_DIM " để tiếp tục..." RESET);
+            getchar();
+            continue;
+        }
         
-        printf("\n  " BG_HIGHLIGHT " KMP INPUT " RESET "\n");
-        printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-        printf(CL_BORDER "  │ " RESET "Nhập chuỗi cần khớp " BOLD "🧩" RESET ": " CL_LOGO);
+        // 4. KHU VỰC NHẬP MẪU CHUỖI (SEARCH BAR phẳng, hiện đại)
+        printf("\n");
+        printf("  " CL_BORDER ">>> Nhập từ khóa: " RESET CL_LOGO BOLD);
+
         inputString(keyword, 256);
-        printf(RESET CL_BORDER "  └────────────────────────────────────────────────────────────┘\n" RESET);
+        printf(RESET);
         
+        // 5. TRANG HIỂN THỊ KẾT QUẢ (RESULTS PAGE)
         printf("\x1b[2J\x1b[H"); 
-        printf("\n  " CL_BORDER "Dashboard > KMP Search > " RESET BOLD "RESULTS" RESET "\n");
-        printf(CL_BORDER "  ────────────────────────────────────────────────────────────\n" RESET);
-        printf("  " BOLD "Kết quả cho mẫu: " RESET "\"" CL_LOGO "%s" RESET "\"\n", keyword);
-        printf(CL_BORDER "  ────────────────────────────────────────────────────────────\n\n" RESET);
+        printf("\n");
+        printf("  " BG_HIGHLIGHT BOLD "  KẾT QUẢ TRA CỨU DỮ LIỆU  " RESET);
+        printf("  " CL_DIM "Từ khóa:" RESET " \"" CL_LOGO BOLD "%s" RESET "\"\n", keyword);
+        printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n\n");
         
+        // Gọi bộ xử lý logic tìm kiếm chuỗi con
         substringSearching(L, keyword, option);
         
-        printf("\n  " CL_BORDER "────────────────────────────────────────────────────────────" RESET);
-        printf("\n  " CL_KEY "Nhấn Enter để tiếp tục..." RESET);
+        // Thanh footer dừng xem kết quả trước khi lặp lại vòng quét mới
+        printf("\n  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
+        printf("  " CL_DIM "➔ Nhấn " CL_PRIMARY "Enter" CL_DIM " để tiếp tục ..." RESET);
         getchar();
     }
 }
-
 void menuFuzzySearch(KanjiList *L) {
     int option;
     char keyword[256];
     while (1) {
+        // Xóa màn hình và đưa con trỏ về góc trên bên trái
         printf("\x1b[2J\x1b[H");
-        printf("\n  " CL_BORDER "Dashboard > Search > " RESET BOLD "FUZZY SEARCH (TÌM MỜ)" RESET "\n");
-        printf(CL_BORDER "  ────────────────────────────────────────────────────────────\n" RESET);
-        printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-        printf(CL_BORDER "  │" RESET "  " BOLD "CHẾ ĐỘ TÌM KIẾM GẦN ĐÚNG (FUZZY)" RESET "                         " CL_BORDER " │\n" RESET);
-        printf(CL_BORDER "  ├──────┬─────────────────────────────────────────────────────┤\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "01" CL_BORDER "  │" RESET " 🌫️   Khớp mờ mặt chữ Kanji                           " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "02" CL_BORDER "  │" RESET " 🍃  Khớp mờ cách đọc Hiragana                       " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "03" CL_BORDER "  │" RESET " 🔤  Khớp mờ phiên âm Romaji                         " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "04" CL_BORDER "  │" RESET " 💬  Khớp mờ nghĩa Tiếng Việt                        " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "00" CL_BORDER "  │" RESET " ↩️   Quay lại                                        " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  └──────┴─────────────────────────────────────────────────────┘\n" RESET);
-        printf("\n  " BOLD "Chọn chế độ [0-4]" RESET " » " CL_KEY);
         
-        if (scanf("%d", &option) != 1) { while(getchar() != '\n'); continue; }
-        getchar();
+        // 1. THANH DIỀU HƯỚNG SUB-HEADER
+        printf("\n");
+        printf("  " BG_HIGHLIGHT BOLD "  Tìm kiếm từ khóa gần đúng (Levenshtein Distance)  " RESET);
+        printf("\n\n");
+        // 2. DANH SÁCH CHẾ ĐỘ TÌM KIẾM (Cấu trúc Flat-List đồng bộ)
+        printf("  " CL_PRIMARY "┃ " CL_DIM "%-6s" CL_HEADER BOLD "%-35s" RESET "\n", "STT", "DẠNG TỪ KHÓA");
+        printf("  " CL_PRIMARY "┃ " CL_BORDER "──────────────────────────────────────────────────────────────" RESET "\n");
+
+        // Chức năng 01
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "01" RESET "  │  🌫️  " CL_TEXT "%-35s" RESET "\n", 
+               "Khớp gần đúng mặt chữ Kanji");
+        
+        // Chức năng 02
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "02" RESET "  │  🍃  " CL_TEXT "%-35s" RESET "\n", 
+               "Khớp gần đúng cách đọc Hiragana");
+        
+        // Chức năng 03
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "03" RESET "  │  🔤  " CL_TEXT "%-35s" RESET "\n", 
+               "Khớp gần đúng phiên âm Romaji");
+        
+        // Chức năng 04
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "04" RESET "  │  💬  " CL_TEXT "%-35s" RESET "\n", 
+               "Khớp gần đúng nghĩa Tiếng Việt");
+
+        // Phân tách hệ thống
+        printf("  " CL_PRIMARY "┃ " CL_BORDER "──────────────────────────────────────────────────────────────" RESET "\n");
+        
+        // Lệnh quay lại
+        printf("  " CL_PRIMARY "┃ " CL_DIM BOLD "00" RESET "  │  ↩️   " CL_DIM "%-35s" RESET "\n", 
+               "Quay lại Menu tìm kiếm");
+        
+        printf("  " CL_PRIMARY "┃" RESET "\n");
+        
+        // 3. THANH TRẠNG THÁI VÀ DÒNG LỆNH CHỌN CHẾ ĐỘ
+        printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
+        printf("  " CL_DIM "Hướng dẫn:" RESET " Chọn số [" CL_PRIMARY "1-4" RESET "] để xác định chế độ " CL_DIM "│" RESET " Chọn [" CL_ERROR "0" RESET "] để quay lại\n");
+        printf("  " BOLD "Lựa chọn của bạn" RESET " " CL_PRIMARY "» " RESET CL_KEY);
+        
+        if (scanf("%d", &option) != 1) { 
+            while(getchar() != '\n'); 
+            continue; 
+        }
+        getchar(); // Đọc ký tự newline thừa trong bộ đệm
         printf(RESET);
+        
         if (option == 0) break;
-        if (option < 1 || option > 4) continue;
+        if (option < 1 || option > 4) {
+            printf("\n  " CL_ERROR "🚨 [LỖI]: Chế độ chọn không hợp lệ. Vui lòng thử lại!" RESET "\n");
+            printf("\n  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
+            printf("  " CL_DIM "➔ Nhấn " CL_PRIMARY "Enter" CL_DIM " để tiếp tục..." RESET);
+            getchar();
+            continue;
+        }
         
-        printf("\n  " BG_HIGHLIGHT " FUZZY INPUT " RESET "\n");
-        printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-        printf(CL_BORDER "  │ " RESET "Nhập từ khóa (sai dấu/ký tự) " BOLD "☁️" RESET ": " CL_LOGO);
+        // 4. KHU VỰC NHẬP TỪ KHÓA TÌM MỜ (SEARCH BAR phẳng, hiện đại)
+        printf("\n");
+        printf("  " CL_BORDER ">>> Nhập từ khóa: " RESET CL_LOGO BOLD);
+        
         inputString(keyword, 256);
-        printf(RESET CL_BORDER "  └────────────────────────────────────────────────────────────┘\n" RESET);
-        printf("  " CL_TEXT "Đang tính toán khoảng cách chỉnh sửa (Levenshtein)..." RESET "\n");
+        printf(RESET);
         
+
+        // 5. TRANG HIỂN THỊ KẾT QUẢ (RESULTS PAGE)
         printf("\x1b[2J\x1b[H"); 
-        printf("\n  " CL_BORDER "Dashboard > Fuzzy Search > " RESET BOLD "RESULTS" RESET "\n");
-        printf(CL_BORDER "  ────────────────────────────────────────────────────────────\n" RESET);
-        printf("  " BOLD "Kết quả tìm mờ cho: " RESET "\"" CL_LOGO "%s" RESET "\"\n", keyword);
-        printf(CL_BORDER "  ────────────────────────────────────────────────────────────\n\n" RESET);
+        printf("\n");
+        printf("  " BG_HIGHLIGHT BOLD "  KẾT QUẢ TRA CỨU DỮ LIỆU  " RESET);
+        printf("  " CL_DIM "Từ khóa:" RESET " \"" CL_LOGO BOLD "%s" RESET "\"\n", keyword);
+        printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n\n");
         
+        // Gọi bộ xử lý logic tìm kiếm mờ dựa trên khoảng cách chỉnh sửa
         fuzzySearching(L, keyword, option);
         
-        printf("\n  " CL_BORDER "────────────────────────────────────────────────────────────" RESET);
-        printf("\n  " CL_KEY "Nhấn Enter để thực hiện lượt tìm kiếm mới..." RESET);
+        // Thanh footer dừng xem kết quả trước khi lặp lại vòng quét mới
+        printf("\n  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
+        printf("  " CL_DIM "➔ Nhấn " CL_PRIMARY "Enter" CL_DIM " để thực hiện lượt tìm kiếm mới..." RESET);
         getchar();
     }
 }
@@ -188,62 +323,83 @@ void menuPrefixSearch(TrieNode *trieRoot) {
     char keyword[256];
     int choice;
     while (1) {
+        // Xóa màn hình và đưa con trỏ về góc trên bên trái
         printf("\x1b[2J\x1b[H");
-        printf("\n  " CL_BORDER "Dashboard > Tra cứu > " RESET BOLD "PREFIX SEARCH (TÌM THEO TIỀN TỐ)" RESET "\n");
-        printf(CL_BORDER "  ────────────────────────────────────────────────────────────\n" RESET);
         
-        printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-        printf(CL_BORDER "  │" RESET "  " BOLD "VUI LÒNG CHỌN CHẾ ĐỘ" RESET "                                      " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  ├──────┬─────────────────────────────────────────────────────┤\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "01" CL_BORDER "  │" RESET " 🔍 Tìm kiếm theo tiền tố                            " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "00" CL_BORDER "  │" RESET " ↩️   Quay lại                                        " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  └──────┴─────────────────────────────────────────────────────┘\n" RESET);
+        // 1. THANH DIỀU HƯỚNG SUB-HEADER
+        printf("\n");
+        printf("  " BG_HIGHLIGHT BOLD "  Tìm theo tiền tố (Trie Data Structure)  " RESET);
+        printf("\n\n");
+        // 2. DANH SÁCH CHẾ ĐỘ (Cấu trúc Flat-List đồng bộ)
+        printf("  " CL_PRIMARY "┃ " CL_DIM "%-6s" CL_HEADER BOLD "%-35s" RESET "\n", "STT", "ĐỊNH DẠNG CẦN TÌM");
+        printf("  " CL_PRIMARY "┃ " CL_BORDER "──────────────────────────────────────────────────────────────" RESET "\n");
+
+        // Chức năng 01
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "01" RESET "  │  ⚡  " CL_TEXT "%-35s" RESET "\n", 
+               "Tìm theo Romaji (chữ cái Alphabet)");
+
+        // Phân tách hệ thống
+        printf("  " CL_PRIMARY "┃ " CL_BORDER "──────────────────────────────────────────────────────────────" RESET "\n");
         
-        printf("\n  " BOLD "Lựa chọn của bạn" RESET " » " CL_KEY);
+        // Lệnh quay lại
+        printf("  " CL_PRIMARY "┃ " CL_DIM BOLD "00" RESET "  │  ↩️   " CL_DIM "%-35s" RESET "\n", 
+               "Quay lại Menu tìm kiếm");
+        
+        printf("  " CL_PRIMARY "┃" RESET "\n");
+        
+        // 3. THANH TRẠNG THÁI VÀ DÒNG LỆNH CHỌN CHẾ ĐỘ
+        printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
+        printf("  " CL_DIM "Hướng dẫn:" RESET " Chọn số [" CL_PRIMARY "1" RESET "] để kích hoạt bộ lọc " CL_DIM "│" RESET " Chọn [" CL_ERROR "0" RESET "] để quay lại\n");
+        printf("  " BOLD "Lựa chọn của bạn" RESET " " CL_PRIMARY "» " RESET CL_KEY);
         
         if (scanf("%d", &choice) != 1) {
             while(getchar() != '\n');
             continue;
         }
-        getchar();
+        getchar(); // Đọc ký tự newline thừa trong bộ đệm
         printf(RESET);
         
         if (choice == 0) break;
         if (choice != 1) {
-            printf("  " CL_WARN "(!) Lựa chọn không hợp lệ. Vui lòng chọn lại.\n" RESET);
-            printf("\n  " CL_KEY "Nhấn Enter để tiếp tục..." RESET);
+            printf("\n  " CL_ERROR "🚨 [LỖI]: Lựa chọn không hợp lệ. Vui lòng thử lại!" RESET "\n");
+            printf("\n  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
+            printf("  " CL_DIM "➔ Nhấn " CL_PRIMARY "Enter" CL_DIM " để tiếp tục..." RESET);
             getchar();
             continue;
         }
         
-        printf("\n  " BG_HIGHLIGHT " PREFIX INPUT " RESET "\n");
-        printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-        printf(CL_BORDER "  │ " RESET "Nhập chuỗi ký tự bắt đầu (romaji only) " BOLD "⚡" RESET ": " CL_LOGO);
-        inputString(keyword, 256);
-        printf(RESET CL_BORDER "  └────────────────────────────────────────────────────────────┘\n" RESET);
-        printf("  " CL_TEXT "Cây Trie đang xử lý luồng dữ liệu..." RESET "\n");
+        // 4. KHU VỰC NHẬP TIỀN TỐ (SEARCH BAR phẳng, hiện đại)
+        printf("\n");
+        printf("  " CL_BORDER ">>> Nhập từ khóa: " RESET CL_LOGO BOLD);
         
+        inputString(keyword, 256);
+        printf(RESET);
+        
+        // 5. TRANG HIỂN THỊ KẾT QUẢ (RESULTS PAGE)
         printf("\x1b[2J\x1b[H"); 
-        printf("\n  " CL_BORDER "Dashboard > Prefix Search > " RESET BOLD "RESULTS" RESET "\n");
-        printf(CL_BORDER "  ────────────────────────────────────────────────────────────\n" RESET);
-        printf("  " BOLD "Danh sách từ vựng bắt đầu bằng: " RESET "\"" CL_LOGO "%s" RESET "\"\n", keyword);
-        printf(CL_BORDER "  ────────────────────────────────────────────────────────────\n\n" RESET);
+        printf("\n");
+        printf("  " BG_HIGHLIGHT BOLD "  KẾT QUẢ TRA CỨU DỮ LIỆU  " RESET);
+        printf("  " CL_DIM "Từ khóa:" RESET " \"" CL_LOGO BOLD "%s" RESET "\"\n", keyword);
+        printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n\n");
         
         TrieNode *matchNode = searchPrefixNode(trieRoot, keyword);
         if (!matchNode) {
-            printf("  " CL_KEY "[!]" RESET " Không tồn tại từ vựng nào bắt đầu bằng từ khóa: \"" BG_HIGHLIGHT "%s" RESET "\"\n", keyword);
+            printf("  " CL_ERROR "🚨 [THÔNG BÁO]:" RESET " Không tồn tại từ vựng nào bắt đầu bằng từ khóa: \"" CL_LOGO BOLD "%s" RESET "\"\n", keyword);
         } else {
             int resultCounter = 0;
             printAllWordsFromNode(matchNode, &resultCounter);
-            if(resultCounter == 0) {
-                printf("  " CL_KEY "[!]" RESET " Không có kết quả nào phù hợp hoàn toàn.\n");
+            
+            if (resultCounter == 0) {
+                printf("  " CL_ERROR "🚨 [THÔNG BÁO]:" RESET " Không có kết quả nào phù hợp hoàn toàn với chuỗi cung cấp.\n");
             } else {
-                printf("\n  " BG_HIGHLIGHT " THÀNH CÔNG " RESET " Tìm thấy tổng cộng " BOLD "%d" RESET " kết quả phù hợp.\n", resultCounter);
+                printf("\n  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
+                printf("  " BG_HIGHLIGHT BOLD "  TRUY XUẤT HOÀN TẤT  " RESET " Tìm thấy tổng cộng " CL_KEY BOLD "%d" RESET " kết quả phù hợp.\n", resultCounter);
             }
         }
         
-        printf("\n  " CL_BORDER "────────────────────────────────────────────────────────────" RESET);
-        printf("\n  " CL_KEY "Nhấn Enter để thực hiện lượt tìm kiếm mới..." RESET);
+        // Thanh footer dừng xem kết quả trước khi lặp lại vòng quét mới
+        printf("\n  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
+        printf("  " CL_DIM "➔ Nhấn " CL_PRIMARY "Enter" CL_DIM " để thực hiện lượt tìm kiếm mới..." RESET);
         getchar();
     }
 }
@@ -251,37 +407,72 @@ void menuPrefixSearch(TrieNode *trieRoot) {
 void caseNo1(KanjiList *L, HashTable *vHT, HashTableK *kHT, TrieNode *trieRoot) {
     int choice;
     while(1) {
+        // Xóa màn hình và đưa con trỏ về góc trên bên trái
         printf("\x1b[2J\x1b[H"); 
-        printf("\n  " CL_BORDER "Dashboard > " RESET BOLD "HỆ THỐNG TÌM KIẾM" RESET "\n");
-        printf(CL_BORDER "  ────────────────────────────────────────────────────────────\n" RESET);
         
-        printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-        printf(CL_BORDER "  │" RESET "  " BOLD "CHỌN PHƯƠNG THỨC TRA CỨU" RESET "                                 " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  ├──────┬─────────────────────────────────────────────────────┤\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "01" CL_BORDER "  │" RESET " 🎯  Exact Match (Tìm chính xác 100%%)                " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "02" CL_BORDER "  │" RESET " 🔍  Pattern Match (KMP - Tìm chuỗi con)              " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "03" CL_BORDER "  │" RESET " 🌫️  Fuzzy Match (Tìm gần đúng Levenshtein)          " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "04" CL_BORDER "  │" RESET " ⚡  Prefix Search (Gợi ý tiền tố cây Trie)          " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  │  " CL_KEY "00" CL_BORDER "  │" RESET " ↩️  Quay lại Menu chính                              " CL_BORDER "│\n" RESET);
-        printf(CL_BORDER "  └──────┴─────────────────────────────────────────────────────┘\n" RESET);
+        // 1. THANH DIỀU HƯỚNG SUB-HEADER (Hiện đại, tối giản)
+        printf("\n");
+        printf("  " BG_HIGHLIGHT BOLD "  HỆ THỐNG TÌM KIẾM NÂNG CAO  " RESET);
+        printf("  " CL_DIM "│  04 phương thức tra cứu" RESET "\n");
+        printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n\n");
         
-        printf("\n  " BOLD "Lựa chọn của bạn" RESET " » " CL_KEY);
-        if (scanf("%d", &choice) != 1) { while(getchar() != '\n'); continue; }
-        getchar();
+        // 2. DANH SÁCH PHƯƠNG THỨC TRA CỨU (Cấu trúc phẳng, đồng bộ 100% với Menu chính)
+        printf("  " CL_PRIMARY "┃ " CL_DIM "%-6s" CL_HEADER BOLD "%-35s" RESET "\n", "STT", "⚡ PHƯƠNG THỨC TRA CỨU");
+        printf("  " CL_PRIMARY "┃ " CL_BORDER "──────────────────────────────────────────────────────────────" RESET "\n");
+
+        // Chức năng 01
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "01" RESET "  │  🔍  " CL_TEXT "%-35s" RESET "\n", 
+               "Tra cứu dữ liệu chính xác (HashTable)");
+        
+        // Chức năng 02
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "02" RESET "  │  🔍  " CL_TEXT "%-35s" RESET "\n", 
+               "Khớp mẫu phân đoạn chuỗi con (KMP Algorithm)");
+        
+        // Chức năng 03
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "03" RESET "  │  🔍  " CL_TEXT "%-35s" RESET "\n", 
+               "Tìm kiếm từ khóa gần đúng (Levenshtein Distance)");
+        
+        // Chức năng 04
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "04" RESET "  │  🔍  " CL_TEXT "%-35s" RESET "\n", 
+               "Tìm theo tiền tố (Trie Data Structure)");
+
+        // Phân tách hệ thống
+        printf("  " CL_PRIMARY "┃ " CL_BORDER "──────────────────────────────────────────────────────────────" RESET "\n");
+        
+        // Lệnh quay lại
+        printf("  " CL_PRIMARY "┃ " CL_DIM BOLD "00" RESET "  │  ↩️  " CL_DIM "%-35s" RESET "\n", 
+               "Quay lại Menu chính");
+        
+        printf("  " CL_PRIMARY "┃" RESET "\n");
+        
+        // 3. THANH TRẠNG THÁI VÀ DÒNG LỆNH INPUT
+        printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
+        printf("  " CL_DIM "Hướng dẫn:" RESET " Chọn số [" CL_PRIMARY "1-4" RESET "] để kích hoạt bộ lọc " CL_DIM "│" RESET " Chọn [" CL_ERROR "0" RESET "] để về trang chủ\n");
+        printf("  " BOLD "Lựa chọn của bạn" RESET " " CL_PRIMARY "» " RESET CL_KEY);
+        
+        if (scanf("%d", &choice) != 1) { 
+            while(getchar() != '\n'); 
+            continue; 
+        }
+        getchar(); // Đọc ký tự newline thừa còn lại trong bộ đệm
         printf(RESET);
         
         if (choice == 0) break;
+        
         switch (choice) {
             case 1: menuExactSearch(vHT, kHT); break;
             case 2: menuKMPSearch(L); break;
             case 3: menuFuzzySearch(L); break;
             case 4: menuPrefixSearch(trieRoot); break;
             default:
-                printf("\n  " CL_ERROR "(!) Lựa chọn không hợp lệ. Vui lòng chọn lại." RESET);
+                // Chuẩn hóa thông báo lỗi theo tông màu CL_ERROR đồng bộ hệ thống
+                printf("\n  " CL_ERROR "🚨 [LỖI]: Lựa chọn không hợp lệ. Vui lòng thử lại!" RESET "\n");
                 break;
         }
-        printf("\n  " CL_BORDER "────────────────────────────────────────────────────────────" RESET);
-        printf("\n  " CL_KEY "Nhấn Enter để quay lại danh sách tìm kiếm..." RESET);
+        
+        // Thanh footer giữ giao diện dừng lại xem kết quả trước khi xóa màn hình vòng lặp mới
+        printf("\n  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
+        printf("  " CL_DIM "➔ Nhấn " CL_PRIMARY "Enter" CL_DIM " để tiếp tục hệ thống tra cứu..." RESET);
         getchar();
     }
 }
@@ -326,11 +517,11 @@ void handleMenuSelection(char *rawJson) {
         getchar();
 
         switch (choice) {
-            case 1: caseNo1(&myData, vocabHT, kanjiHT, trieRoot); break;
-            case 2: caseNo2(&myData); break;
-            case 3: caseNo3(&myData); break;
-            case 4: caseNo4(&myData); break;
-            case 5: caseNo5(&myData); break;
+            case 1: caseNo1(&myData, vocabHT, kanjiHT, trieRoot); getchar(); break;
+            case 2: caseNo2(&myData); getchar(); break;
+            case 3: caseNo3(&myData); getchar(); break;
+            case 4: caseNo4(&myData); getchar(); break;
+            case 5: caseNo5(&myData); getchar(); break;
             case 0:
                 printf("Dang thoat chuong trinh...\n");
                 freeTrie(trieRoot);

@@ -3,21 +3,29 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
+
 #include "multiple_choice.h"
 #include "../data_structures.h"
 #include "utils.h"
 
 #define KANJI_PER_LESSON 16
-#define MAX_INPUT_SIZE 65536
+#define MAX_INPUT_SIZE   65536
+#define LINE_BUFFER_SIZE 4096
+#define MIN_REQUIRED_QA  4
 
-// Cấu trúc lưu dữ liệu nhập từ bàn phím
+// Cấu trúc lưu dữ liệu thô nhập từ bàn phím
 typedef struct {
     char **data;
     int count;
 } RawDataList;
+
+// ==========================================
+// THÀNH PHẦN QUẢN LÝ BỘ NHỚ (MEMORY MANAGEMENT)
+// ==========================================
 
 void freeKanjiMCList(KanjiMCList *list) {
     if (!list) return;
@@ -45,21 +53,44 @@ void freeVocabMCList(VocabMCList *list) {
     free(list);
 }
 
+void freeRawDataList(RawDataList *rawList) {
+    if (!rawList) return;
+    if (rawList->data) {
+        for (int i = 0; i < rawList->count; i++) {
+            free(rawList->data[i]);
+        }
+        free(rawList->data);
+    }
+    free(rawList);
+}
+
+// ==========================================
+// THÀNH PHẦN CHUYỂN ĐỔI DỮ LIỆU (MAPPING & CONVERSION)
+// ==========================================
+
 KanjiMCList* mapToKanjiMCRange(KanjiList *L, int start, int end) {
+    if (!L || start < 0 || end > L->kanjiCount || start >= end) return NULL;
+
     KanjiMCList *mcList = malloc(sizeof(KanjiMCList));
     if (!mcList) return NULL;
 
     mcList->kanjiCount = end - start;
     mcList->arr = malloc(mcList->kanjiCount * sizeof(KanjiMC));
+    if (!mcList->arr) {
+        free(mcList);
+        return NULL;
+    }
 
     for (int i = 0; i < mcList->kanjiCount; i++) {
-        mcList->arr[i].kanji = strdup(L->kanjis[start + i].kanji);
+        mcList->arr[i].kanji   = strdup(L->kanjis[start + i].kanji);
         mcList->arr[i].hanViet = strdup(L->kanjis[start + i].hanViet);
     }
     return mcList;
 }
 
 VocabMCList* mapToVocabMCRange(KanjiList *L, int start, int end) {
+    if (!L || start < 0 || end > L->kanjiCount || start >= end) return NULL;
+
     VocabMCList *vList = malloc(sizeof(VocabMCList));
     if (!vList) return NULL;
 
@@ -69,14 +100,19 @@ VocabMCList* mapToVocabMCRange(KanjiList *L, int start, int end) {
     }
 
     vList->arr = malloc(vList->vocabCount * sizeof(VocabMC));
+    if (!vList->arr) {
+        free(vList);
+        return NULL;
+    }
+
     int index = 0;
     for (int i = start; i < end; i++) {
         for (int j = 0; j < L->kanjis[i].vocabsCount; j++) {
             Vocab *v = &L->kanjis[i].vocabs[j];
-            vList->arr[index].vocab = strdup(v->vocab);
+            vList->arr[index].vocab    = strdup(v->vocab);
             vList->arr[index].furigana = strdup(v->hiragana);
-            vList->arr[index].romaji = strdup(v->romaji);
-            vList->arr[index].meaning = strdup(v->meaning);
+            vList->arr[index].romaji   = strdup(v->romaji);
+            vList->arr[index].meaning  = strdup(v->meaning);
             index++;
         }
     }
@@ -84,95 +120,116 @@ VocabMCList* mapToVocabMCRange(KanjiList *L, int start, int end) {
 }
 
 char* getKanjiDataByType(KanjiMC *item, int type) {
-    if (type == 1) return item->kanji;
-    return item->hanViet;
+    return (type == 1) ? item->kanji : item->hanViet;
 }
 
+char* getVocabDataByType(VocabMC *item, int type) {
+    switch (type) {
+        case 1:  return item->vocab;
+        case 2:  return item->furigana;
+        case 3:  return item->romaji;
+        case 4:  return item->meaning;
+        default: return item->vocab;
+    }
+}
+
+// ==========================================
+// TRÌNH ĐIỀU HƯỚNG NHẬP LIỆU AN TOÀN (SAFE INPUT)
+// ==========================================
+
+static int safeReadInt(int minVal, int maxVal, int *outValue) {
+    char buffer[128];
+    if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+        return 0;
+    }
+    buffer[strcspn(buffer, "\r\n")] = '\0';
+    
+    char *endptr;
+    long val = strtol(buffer, &endptr, 10);
+    if (endptr == buffer || *endptr != '\0') {
+        return 0; 
+    }
+    if (val < minVal || val > maxVal) {
+        return 0;
+    }
+    *outValue = (int)val;
+    return 1;
+}
+
+// ==========================================
+// LÕI LOGIC TRẮC NGHIỆM (TEST CORE LOGIC)
+// ==========================================
+
 void runMultipleChoiceTestKanji(KanjiMCList *list) {
-    if (!list || list->kanjiCount < 4) {
-        printf(CL_ERROR "  ⚠ Không đủ dữ liệu làm trắc nghiệm (cần ít nhất 4 câu).\n" RESET);
+    if (!list || list->kanjiCount < MIN_REQUIRED_QA) {
+        printf("\n  " CL_PRIMARY "┃ " CL_ERROR "LỖI HỆ THỐNG: Cần tối thiểu %d câu hỏi để khởi tạo.\n" RESET, MIN_REQUIRED_QA);
         return;
     }
 
-    int qType, aType;
+    int qType = 1, aType = 2;
     clearScreen();
     
-    printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-    printf(CL_BORDER "  │" BG_HIGHLIGHT "                   THIẾT LẬP CÂU HỎI                    " RESET CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  ├────────────────────────────────────────────────────────────┤\n" RESET);
-    printf(CL_BORDER "  │  " CL_KEY "[1]" RESET " Kanji                                            " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  │  " CL_KEY "[2]" RESET " Han Viet                                        " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  └────────────────────────────────────────────────────────────┘\n" RESET);
+    printf("\n  " CL_PRIMARY "┃ " BG_HIGHLIGHT BOLD " CẤU HÌNH KIỂM TRA KANJI " RESET "\n");
+    printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
+    printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "[1]" RESET " Kanji\n");
+    printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "[2]" RESET " Hán Việt\n");
+    printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
     
-    printf("\n  " BOLD "Chọn loại CÂU HỎI: " RESET);
-    scanf("%d", &qType);
-    printf("  " BOLD "Chọn loại CÂU TRẢ LỜI: " RESET);
-    scanf("%d", &aType);
-    getchar();
+    do {
+        printf("  " CL_PRIMARY "┃ Chọn dạng CÂU HỎI [1-2]: ");
+    } while (!safeReadInt(1, 2, &qType));
 
-    srand(time(NULL));
+    do {
+        printf("  " CL_PRIMARY "┃ Chọn dạng CÂU TRẢ LỜI [1-2]: ");
+    } while (!safeReadInt(1, 2, &aType));
+
+    srand((unsigned int)time(NULL));
+    int *correctFlags = calloc(list->kanjiCount, sizeof(int));
+    if (!correctFlags) return;
+
+    int totalCorrect = 0, roundCount = 0, stop = 0;
+    char tempBuf[32];
     
-    int *correctFlags = (int*)calloc(list->kanjiCount, sizeof(int));
-    int totalCorrect = 0;
-    int roundCount = 0;
-    int stop = 0;
-    
-    printf(CL_SUCCESS "\n  === BAT DAU LUYEN TAP KANJI ===\n" RESET);
-    printf(CL_TEXT "  Ban se duoc hoi cho den khi tra loi dung tat ca cac cau.\n" RESET);
-    printf(CL_WARN "  Nhan 0 o bat ky cau hoi nao de DUNG lai.\n" RESET);
-    printf("\n  " CL_KEY "Nhan Enter de bat dau..." RESET);
-    getchar();
+    printf("\n  " CL_PRIMARY "┃ " CL_SUCCESS "✔ Cấu hình hoàn tất! Nhập '0' ở bất kỳ câu nào để thoát." RESET);
+    printf("\n  " CL_PRIMARY "┃ ▶ Nhấn Enter để bắt đầu bài thi...");
+    fgets(tempBuf, sizeof(tempBuf), stdin);
     
     while (totalCorrect < list->kanjiCount && !stop) {
         roundCount++;
         int roundScore = 0;
         int questionsInRound = 0;
         
-        clearScreen();
-        printf(CL_BORDER "  ╔════════════════════════════════════════════════════════════╗\n" RESET);
-        printf(CL_BORDER "  ║" BG_HIGHLIGHT "                       LUOT %d                            " RESET CL_BORDER "║\n", roundCount);
-        printf(CL_BORDER "  ╠════════════════════════════════════════════════════════════╣\n" RESET);
-        printf(CL_BORDER "  ║  " CL_KEY "Tien do: %d/%d cau da dung" RESET "                                      ║\n", totalCorrect, list->kanjiCount);
-        printf(CL_BORDER "  ╚════════════════════════════════════════════════════════════╝\n" RESET);
-        
-        int recent = list->kanjiCount - totalCorrect;
         for (int i = 0; i < list->kanjiCount && !stop; i++) {
             if (correctFlags[i] == 1) continue;
             
             questionsInRound++;
             clearScreen();
             
-            printf(CL_BORDER "  ╔════════════════════════════════════════════════════════════╗\n" RESET);
-            printf(CL_BORDER "  ║" BG_HIGHLIGHT "            LUOT %d - CAU %d/%d                     " RESET CL_BORDER "║\n", roundCount, questionsInRound, recent);
-            printf(CL_BORDER "  ╠════════════════════════════════════════════════════════════╣\n" RESET);
-            printf(CL_BORDER "  ║  " CL_KEY "Tien do: %d/%d cau da dung" RESET "                                      ║\n", totalCorrect, list->kanjiCount);
-            printf(CL_BORDER "  ║  " CL_DIM "(Nhan 0 de dung luyen tap)" RESET "                                 ║\n" RESET);
-            printf(CL_BORDER "  ╚════════════════════════════════════════════════════════════╝\n\n" RESET);
-            
+            int percent = (int)(((float)totalCorrect / list->kanjiCount) * 100);
+            printf("\n  " CL_PRIMARY "┃ " BOLD "Vòng: #%02d" RESET "  │  " CL_SUCCESS "Số câu đúng: %d/%d (%d%%)" RESET "\n", roundCount, totalCorrect, list->kanjiCount, percent);
+            printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
+
             char *questionText = getKanjiDataByType(&list->arr[i], qType);
             char *correctAnswerText = getKanjiDataByType(&list->arr[i], aType);
-            
-            printf(CL_PRIMARY "  ┌────────────────────────────────────────────────────────┐\n");
-            printf("  │ " CL_TEXT "Câu hỏi: [%s] tương ứng với?" CL_PRIMARY "                     │\n", questionText);
-            printf("  └────────────────────────────────────────────────────────┘\n\n" RESET);
-            
+
+            printf("  " CL_PRIMARY "┃ " CL_KANJI BOLD " %s " RESET , questionText);
+            printf(CL_TEXT "tương ứng với ? \n" RESET);
+            printf(CL_PRIMARY " ┃ \n");
+
             char *options[4];
             int correctIdx = rand() % 4;
             options[correctIdx] = correctAnswerText;
-            
+
             for (int j = 0; j < 4; j++) {
                 if (j == correctIdx) continue;
-                
-                int randIdx;
-                int isDuplicate;
+                int randIdx, isDuplicate;
                 do {
                     isDuplicate = 0;
                     randIdx = rand() % list->kanjiCount;
-                    
-                    if (randIdx == i) isDuplicate = 1;
+                    if (randIdx == i) { isDuplicate = 1; continue; }
                     
                     char *tempAnswer = getKanjiDataByType(&list->arr[randIdx], aType);
-                    if (strcmp(tempAnswer, correctAnswerText) == 0) isDuplicate = 1;
+                    if (strcmp(tempAnswer, correctAnswerText) == 0) { isDuplicate = 1; continue; }
                     
                     for (int k = 0; k < j; k++) {
                         if (k == correctIdx) continue;
@@ -181,206 +238,154 @@ void runMultipleChoiceTestKanji(KanjiMCList *list) {
                             break;
                         }
                     }
-                    
                 } while (isDuplicate);
-                
                 options[j] = getKanjiDataByType(&list->arr[randIdx], aType);
             }
-            
+
             for (int j = 0; j < 4; j++) {
-                printf("    " CL_WARN "[%d]" RESET " %s\n", j + 1, options[j]);
+                printf("  " CL_PRIMARY "┃" RESET "    " CL_KEY BOLD "[%d]" RESET "  %s\n", j + 1, options[j]);
+            }
+
+            int choice = -1;
+            while (1) {
+                printf("\n  " CL_PRIMARY "┃ " BOLD ">> Bạn chọn [0-4]: " RESET);
+                if (safeReadInt(0, 4, &choice)) break;
+                printf("  " CL_PRIMARY "┃ " CL_ERROR "❌ Vui lòng chỉ nhập số thứ tự từ 1 đến 4!" RESET "\n");
+            }
+
+            if (choice == 0) {
+                stop = 1;
+                break;
             }
             
-            int choice;
-            int validChoice = 0;
-            do {
-                printf(CL_KEY "\n  >> Lựa chọn: " RESET);
-                if (scanf("%d", &choice) != 1) {
-                    while(getchar() != '\n');
-                    printf(CL_ERROR "    Vui lòng nhập số!\n" RESET);
-                    continue;
-                }
-                if (choice == 0) {
-                    stop = 1;
-                    validChoice = 1;
-                    break;
-                }
-                if (choice >= 1 && choice <= 4) {
-                    validChoice = 1;
-                } else {
-                    printf(CL_WARN "    Vui lòng chọn 1-4 hoặc 0 để dừng!\n" RESET);
-                }
-            } while (!validChoice);
-            
-            if (stop) break;
-            
+            printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
             if (choice - 1 == correctIdx) {
-                printf(CL_SUCCESS "\n  ✓ CHÍNH XÁC!\n" RESET);
+                printf("  " CL_PRIMARY "┃ " CL_SUCCESS "🎉 CHÍNH XÁC!" RESET "\n");
                 correctFlags[i] = 1;
                 totalCorrect++;
                 roundScore++;
             } else {
-                printf(CL_ERROR "\n  ✗ SAI! Đáp án đúng là: " CL_SUCCESS "%s\n" RESET, correctAnswerText);
+                printf("  " CL_PRIMARY "┃ " CL_ERROR "❌ CHƯA ĐÚNG!" RESET "\n");
+                printf("  " CL_PRIMARY "┃ >> Đáp án chính xác: " CL_SUCCESS BOLD "%s" RESET "\n", correctAnswerText);
             }
-            
-            printf(CL_DIM "\n  %s : %s\n" RESET, list->arr[i].kanji, list->arr[i].hanViet);
+            printf("  " CL_PRIMARY "┃ >> " CL_KANJI "%s" RESET " - " CL_TEXT "%s" RESET "\n", list->arr[i].kanji, list->arr[i].hanViet);
+            printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
             
             if (totalCorrect < list->kanjiCount && !stop) {
-                printf(CL_DIM "\n  Nhấn Enter để tiếp tục..." RESET);
-                getchar(); getchar();
+                printf("\n  ▶ Nhấn Enter để tiếp tục...");
+                fgets(tempBuf, sizeof(tempBuf), stdin);
             }
         }
         
         if (!stop && totalCorrect < list->kanjiCount) {
             clearScreen();
-            printf(CL_BORDER "  ╔════════════════════════════════════════════════════════════╗\n" RESET);
-            printf(CL_BORDER "  ║" BG_HIGHLIGHT "               KET THUC LUOT %d                       " RESET CL_BORDER "║\n", roundCount);
-            printf(CL_BORDER "  ╠════════════════════════════════════════════════════════════╣\n" RESET);
-            printf(CL_BORDER "  ║  So cau dung trong luot nay: " CL_KEY "%-4d/%d" RESET "                           ║\n", roundScore, questionsInRound);
-            printf(CL_BORDER "  ║  Tong tien do: " CL_KEY "%d/%d cau da dung" RESET "                               ║\n", totalCorrect, list->kanjiCount);
-            printf(CL_BORDER "  ║  Con " CL_WARN "%d cau chua dung" RESET "                                        ║\n", list->kanjiCount - totalCorrect);
-            printf(CL_BORDER "  ╚════════════════════════════════════════════════════════════╝\n" RESET);
+            printf("\n  " CL_PRIMARY "┃ " BG_HIGHLIGHT BOLD " KẾT QUẢ VÒNG LUYỆN TẬP " RESET "\n");
+            printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
+            printf("  " CL_PRIMARY "┃ • Số câu xử lý trong lượt : %d\n", questionsInRound);
+            printf("  " CL_PRIMARY "┃ • Số câu trả lời đúng     : " CL_SUCCESS BOLD "%d" RESET "\n", roundScore);
+            printf("  " CL_PRIMARY "┃ • Số câu trả lời sai      : " CL_ERROR BOLD "%d" RESET "\n", questionsInRound - roundScore);
+            printf("  " CL_PRIMARY "┃ • Tổng tiến độ hiện tại   : %d/%d\n", totalCorrect, list->kanjiCount);
+            printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
             
-            int reviewChoice;
-            printf(CL_TEXT "\n  Ban co muon lam lai cac cau sai khong? " RESET);
-            printf(CL_KEY "(1: Co / 0: Thoat): " RESET);
-            if (scanf("%d", &reviewChoice) != 1) {
-                reviewChoice = 0;
-            }
-            getchar();
-            
-            if (reviewChoice == 0) {
+            int reviewChoice = 0;
+            printf("  " CL_PRIMARY "┃ Bạn có muốn làm lại các câu sai?\n");
+            printf("  " CL_PRIMARY "┃ " CL_KEY "[1] Có, tiếp tục" RESET "  │  " CL_DIM "[0] Không, dừng lại" RESET "\n");
+            printf("  " CL_PRIMARY "┃ >> Lựa chọn của bạn: ");
+            if (!safeReadInt(0, 1, &reviewChoice) || reviewChoice == 0) {
                 stop = 1;
-                printf(CL_WARN "\n  ⚠ Ban da chon thoat.\n" RESET);
-            } else {
-                printf(CL_TEXT "\n  Tiep tuc luyen tap cac cau sai...\n" RESET);
-                printf(CL_DIM "  Nhan Enter de sang luot tiep theo..." RESET);
-                getchar();
             }
         }
     }
     
     clearScreen();
-    
+    printf("\n  " CL_PRIMARY "┃ " BG_HIGHLIGHT BOLD " BÁO CÁO KẾT THÚC BÀI HỌC " RESET "\n");
+    printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
     if (stop && totalCorrect < list->kanjiCount) {
-        printf(CL_BORDER "  ╔════════════════════════════════════════════════════════════╗\n" RESET);
-        printf(CL_BORDER "  ║" CL_WARN "                     ⏸️  DA DUNG LUYEN TAP ⏸️                    " RESET CL_BORDER "║\n" RESET);
-        printf(CL_BORDER "  ╠════════════════════════════════════════════════════════════╣\n" RESET);
-        printf(CL_BORDER "  ║  Ban da dung lai o luot %-4d                              ║\n", roundCount);
-        printf(CL_BORDER "  ║  So cau da lam dung: " CL_KEY "%-4d/%d" RESET "                              ║\n", totalCorrect, list->kanjiCount);
-        printf(CL_BORDER "  ║                                                              ║\n" RESET);
-        printf(CL_BORDER "  ║  " CL_DIM "Hen gap lai ban o lan sau!" RESET "                                ║\n" RESET);
-        printf(CL_BORDER "  ╚════════════════════════════════════════════════════════════╝\n" RESET);
-    } else if (totalCorrect == list->kanjiCount) {
-        printf(CL_BORDER "  ╔════════════════════════════════════════════════════════════╗\n" RESET);
-        printf(CL_BORDER "  ║" CL_SUCCESS "                     🎉 CHÚC MỪNG! 🎉                     " RESET CL_BORDER "║\n" RESET);
-        printf(CL_BORDER "  ╠════════════════════════════════════════════════════════════╣\n" RESET);
-        printf(CL_BORDER "  ║  Ban da tra loi dung TAT CA %-4d cau!                        ║\n", list->kanjiCount);
-        printf(CL_BORDER "  ║  So luot luyen tap: " CL_KEY "%d" RESET "                                            ║\n", roundCount);
-        printf(CL_BORDER "  ║                                                              ║\n" RESET);
-        printf(CL_BORDER "  ║" CL_SUCCESS "                     ★  HOAN HAO  ★                       " RESET CL_BORDER "║\n" RESET);
-        printf(CL_BORDER "  ╚════════════════════════════════════════════════════════════╝\n" RESET);
+        printf("  " CL_PRIMARY "┃ " CL_WARN "🚨 ĐÃ TẠM DỪNG TIẾN TRÌNH" RESET "\n");
+        printf("  " CL_PRIMARY "┃ • Số vòng đã thực hiện : %d\n", roundCount);
+        printf("  " CL_PRIMARY "┃ • Kết quả hoàn thành   : " CL_PRIMARY "%d/%d" RESET " mục.\n", totalCorrect, list->kanjiCount);
+    } else {
+        printf("  " CL_PRIMARY "┃ " CL_SUCCESS "🎉 HOÀN THÀNH XUẤT SẮC!" RESET "\n");
+        printf("  " CL_PRIMARY "┃ • Bạn đã trả lời đúng toàn bộ " CL_SUCCESS BOLD "%d/%d" RESET " câu hỏi Kanji.\n", totalCorrect, list->kanjiCount);
+        printf("  " CL_PRIMARY "┃ • Tổng số lượt thực hiện: %d\n", roundCount);
     }
+    printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
     
     free(correctFlags);
-    printf(CL_DIM "\n  Nhan Enter de quay lai menu." RESET);
-    getchar(); getchar();
-}
-
-char* getVocabDataByType(VocabMC *item, int type) {
-    switch (type) {
-        case 1: return item->vocab;
-        case 2: return item->furigana;
-        case 3: return item->romaji;
-        case 4: return item->meaning;
-        default: return item->vocab;
-    }
+    printf("\n  ▶ Nhấn Enter để quay lại Menu.");
+    fgets(tempBuf, sizeof(tempBuf), stdin);
 }
 
 void runMultipleChoiceTestVocab(VocabMCList *list) {
-    if (!list || list->vocabCount < 4) {
-        printf(CL_ERROR "  ⚠ Không đủ dữ liệu làm trắc nghiệm (cần ít nhất 4 từ).\n" RESET);
+    if (!list || list->vocabCount < MIN_REQUIRED_QA) {
+        printf("\n  " CL_PRIMARY "┃ " CL_ERROR "LỖI HỆ THỐNG: Cần tối thiểu %d từ vựng để khởi tạo.\n" RESET, MIN_REQUIRED_QA);
         return;
     }
 
-    int qType, aType;
+    int qType = 1, aType = 4;
     clearScreen();
     
-    printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-    printf(CL_BORDER "  │" BG_HIGHLIGHT "                   THIẾT LẬP CÂU HỎI                    " RESET CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  ├────────────────────────────────────────────────────────────┤\n" RESET);
-    printf(CL_BORDER "  │  " CL_KEY "[1]" RESET " Kanji    " CL_KEY "[2]" RESET " Furigana    " CL_KEY "[3]" RESET " Romaji    " CL_KEY "[4]" RESET " Meaning  " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  └────────────────────────────────────────────────────────────┘\n" RESET);
+    printf("\n  " CL_PRIMARY "┃ " BG_HIGHLIGHT BOLD " CẤU HÌNH KIỂM TRA TỪ VỰNG " RESET "\n");
+    printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
+    printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "[1]" RESET " Từ vựng gốc (Kanji/Kana)  " CL_KEY BOLD "[2]" RESET " Cách đọc Furigana\n");
+    printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "[3]" RESET " Phiên âm Romaji           " CL_KEY BOLD "[4]" RESET " Nghĩa Tiếng Việt\n");
+    printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
     
-    printf("\n  " BOLD "Chọn loại CÂU HỎI: " RESET);
-    scanf("%d", &qType);
-    printf("  " BOLD "Chọn loại CÂU TRẢ LỜI: " RESET);
-    scanf("%d", &aType);
-    getchar();
+    do {
+        printf("  " CL_PRIMARY "┃ Chọn dạng CÂU HỎI [1-4]: ");
+    } while (!safeReadInt(1, 4, &qType));
 
-    srand(time(NULL));
+    do {
+        printf("  " CL_PRIMARY "┃ Chọn dạng CÂU TRẢ LỜI [1-4]: ");
+    } while (!safeReadInt(1, 4, &aType));
+
+    srand((unsigned int)time(NULL));
+    int *correctFlags = calloc(list->vocabCount, sizeof(int));
+    if (!correctFlags) return;
+
+    int totalCorrect = 0, roundCount = 0, stop = 0;
+    char tempBuf[32];
     
-    int *correctFlags = (int*)calloc(list->vocabCount, sizeof(int));
-    int totalCorrect = 0;
-    int roundCount = 0;
-    int stop = 0;
-    
-    printf(CL_SUCCESS "\n  === BAT DAU LUYEN TAP ===\n" RESET);
-    printf(CL_TEXT "  Ban se duoc hoi cho den khi tra loi dung tat ca cac cau.\n" RESET);
-    printf(CL_WARN "  Nhan 0 o bat ky cau hoi nao de DUNG lai.\n" RESET);
-    printf("\n  " CL_KEY "Nhan Enter de bat dau..." RESET);
-    getchar();
+    printf("\n  " CL_PRIMARY "┃ " CL_SUCCESS "✔ Cấu hình hoàn tất!" RESET);
+    printf("\n  " CL_PRIMARY "┃ ▶ Nhấn Enter để bắt đầu...");
+    fgets(tempBuf, sizeof(tempBuf), stdin);
     
     while (totalCorrect < list->vocabCount && !stop) {
         roundCount++;
         int roundScore = 0;
         int questionsInRound = 0;
         
-        clearScreen();
-        printf(CL_BORDER "  ╔════════════════════════════════════════════════════════════╗\n" RESET);
-        printf(CL_BORDER "  ║" BG_HIGHLIGHT "                       LUOT %d                            " RESET CL_BORDER "║\n", roundCount);
-        printf(CL_BORDER "  ╠════════════════════════════════════════════════════════════╣\n" RESET);
-        printf(CL_BORDER "  ║  " CL_KEY "Tien do: %d/%d cau da dung" RESET "                                      ║\n", totalCorrect, list->vocabCount);
-        printf(CL_BORDER "  ╚════════════════════════════════════════════════════════════╝\n" RESET);
-        
-        int recent = list->vocabCount - totalCorrect;
         for (int i = 0; i < list->vocabCount && !stop; i++) {
             if (correctFlags[i] == 1) continue;
             
             questionsInRound++;
             clearScreen();
             
-            printf(CL_BORDER "  ╔════════════════════════════════════════════════════════════╗\n" RESET);
-            printf(CL_BORDER "  ║" BG_HIGHLIGHT "            LUOT %d - CAU %d/%d                     " RESET CL_BORDER "║\n", roundCount, questionsInRound, recent);
-            printf(CL_BORDER "  ╠════════════════════════════════════════════════════════════╣\n" RESET);
-            printf(CL_BORDER "  ║  " CL_KEY "Tien do: %d/%d cau da dung" RESET "                                      ║\n", totalCorrect, list->vocabCount);
-            printf(CL_BORDER "  ║  " CL_DIM "(Nhan 0 de dung luyen tap)" RESET "                                 ║\n" RESET);
-            printf(CL_BORDER "  ╚════════════════════════════════════════════════════════════╝\n\n" RESET);
-            
+            int percent = (int)(((float)totalCorrect / list->vocabCount) * 100);
+            printf("\n  " CL_PRIMARY "┃ " BOLD "Vòng: #%02d" RESET "  │  " CL_SUCCESS "Số câu đúng: %d/%d (%d%%)" RESET "\n", roundCount, totalCorrect, list->vocabCount, percent);
+            printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
+
             char *questionText = getVocabDataByType(&list->arr[i], qType);
             char *correctAnswerText = getVocabDataByType(&list->arr[i], aType);
-            
-            printf(CL_PRIMARY "  ┌────────────────────────────────────────────────────────┐\n");
-            printf("  │ " CL_TEXT "Câu hỏi: [%s] tương ứng với?" CL_PRIMARY "                     │\n", questionText);
-            printf("  └────────────────────────────────────────────────────────┘\n\n" RESET);
-            
+
+            printf("  " CL_PRIMARY "┃ " CL_KANA BOLD " %s " RESET , questionText);
+            printf(CL_TEXT "tương ứng với ? \n " RESET );
+            printf(CL_PRIMARY " ┃ \n");
+
             char *options[4];
             int correctIdx = rand() % 4;
             options[correctIdx] = correctAnswerText;
-            
+
             for (int j = 0; j < 4; j++) {
                 if (j == correctIdx) continue;
-                
-                int randIdx;
-                int isDuplicate;
+                int randIdx, isDuplicate;
                 do {
                     isDuplicate = 0;
                     randIdx = rand() % list->vocabCount;
-                    
-                    if (randIdx == i) isDuplicate = 1;
+                    if (randIdx == i) { isDuplicate = 1; continue; }
                     
                     char *tempAnswer = getVocabDataByType(&list->arr[randIdx], aType);
-                    if (strcmp(tempAnswer, correctAnswerText) == 0) isDuplicate = 1;
+                    if (strcmp(tempAnswer, correctAnswerText) == 0) { isDuplicate = 1; continue; }
                     
                     for (int k = 0; k < j; k++) {
                         if (k == correctIdx) continue;
@@ -389,128 +394,87 @@ void runMultipleChoiceTestVocab(VocabMCList *list) {
                             break;
                         }
                     }
-                    
                 } while (isDuplicate);
-                
                 options[j] = getVocabDataByType(&list->arr[randIdx], aType);
             }
-            
+
             for (int j = 0; j < 4; j++) {
-                printf("    " CL_WARN "[%d]" RESET " %s\n", j + 1, options[j]);
+                printf("  " CL_PRIMARY "┃" RESET "    " CL_KEY BOLD "[%d]" RESET "  %s\n", j + 1, options[j]);
+            }
+
+            int choice = -1;
+            while (1) {
+                printf("\n  " CL_PRIMARY "┃ " BOLD ">> Bạn chọn [0-4]: " RESET);
+                if (safeReadInt(0, 4, &choice)) break;
+                printf("  " CL_PRIMARY "┃ " CL_ERROR "❌ Vui lòng chỉ nhập số thứ tự từ 1 đến 4!" RESET "\n");
+            }
+
+            if (choice == 0) {
+                stop = 1;
+                break;
             }
             
-            int choice;
-            int validChoice = 0;
-            do {
-                printf(CL_KEY "\n  >> Lựa chọn: " RESET);
-                if (scanf("%d", &choice) != 1) {
-                    while(getchar() != '\n');
-                    printf(CL_ERROR "    Vui lòng nhập số!\n" RESET);
-                    continue;
-                }
-                if (choice == 0) {
-                    stop = 1;
-                    validChoice = 1;
-                    break;
-                }
-                if (choice >= 1 && choice <= 4) {
-                    validChoice = 1;
-                } else {
-                    printf(CL_WARN "    Vui lòng chọn 1-4 hoặc 0 để dừng!\n" RESET);
-                }
-            } while (!validChoice);
-            
-            if (stop) break;
-            
+            printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
             if (choice - 1 == correctIdx) {
-                printf(CL_SUCCESS "\n  ✓ CHÍNH XÁC!\n" RESET);
+                printf("  " CL_PRIMARY "┃ " CL_SUCCESS "🎉 CHÍNH XÁC!" RESET "\n");
                 correctFlags[i] = 1;
                 totalCorrect++;
                 roundScore++;
             } else {
-                printf(CL_ERROR "\n  ✗ SAI! Đáp án đúng là: " CL_SUCCESS "%s\n" RESET, correctAnswerText);
+                printf("  " CL_PRIMARY "┃ " CL_ERROR "❌ CHƯA ĐÚNG!" RESET "\n");
+                printf("  " CL_PRIMARY "┃ >> Đáp án chính xác: " CL_SUCCESS BOLD "%s" RESET "\n", correctAnswerText);
             }
-            
-            printf(CL_DIM "\n  %s (%s - %s) : %s\n" RESET, 
-                   list->arr[i].vocab, 
-                   list->arr[i].furigana, 
-                   list->arr[i].romaji, 
-                   list->arr[i].meaning);
+            printf("  " CL_PRIMARY "┃ >> " CL_KANA "%s" RESET " (%s - %s) " CL_TEXT "%s" RESET "\n", 
+                   list->arr[i].vocab, list->arr[i].furigana, list->arr[i].romaji, list->arr[i].meaning);
+            printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
             
             if (totalCorrect < list->vocabCount && !stop) {
-                printf(CL_DIM "\n  Nhấn Enter để tiếp tục..." RESET);
-                getchar(); getchar();
+                printf("\n  ▶ Nhấn Enter để tiếp tục...");
+                fgets(tempBuf, sizeof(tempBuf), stdin);
             }
         }
         
         if (!stop && totalCorrect < list->vocabCount) {
             clearScreen();
-            printf(CL_BORDER "  ╔════════════════════════════════════════════════════════════╗\n" RESET);
-            printf(CL_BORDER "  ║" BG_HIGHLIGHT "               KET THUC LUOT %d                       " RESET CL_BORDER "║\n", roundCount);
-            printf(CL_BORDER "  ╠════════════════════════════════════════════════════════════╣\n" RESET);
-            printf(CL_BORDER "  ║  So cau dung trong luot nay: " CL_KEY "%-4d/%d" RESET "                           ║\n", roundScore, questionsInRound);
-            printf(CL_BORDER "  ║  Tong tien do: " CL_KEY "%d/%d cau da dung" RESET "                               ║\n", totalCorrect, list->vocabCount);
-            printf(CL_BORDER "  ║  Con " CL_WARN "%d cau chua dung" RESET "                                        ║\n", list->vocabCount - totalCorrect);
-            printf(CL_BORDER "  ╚════════════════════════════════════════════════════════════╝\n" RESET);
+            printf("\n  " CL_PRIMARY "┃ " BG_HIGHLIGHT BOLD " KẾT QUẢ VÒNG LUYỆN TẬP " RESET "\n");
+            printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
+            printf("  " CL_PRIMARY "┃ • Đúng trong vòng này: " CL_SUCCESS BOLD "%d / %d" RESET " câu\n", roundScore, questionsInRound);
+            printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
             
-            int reviewChoice;
-            printf(CL_TEXT "\n  Ban co muon lam lai cac cau sai khong? " RESET);
-            printf(CL_KEY "(1: Co / 0: Thoat): " RESET);
-            if (scanf("%d", &reviewChoice) != 1) {
-                reviewChoice = 0;
-            }
-            getchar();
-            
-            if (reviewChoice == 0) {
+            int reviewChoice = 0;
+            printf("  " CL_PRIMARY "┃ Bạn có muốn làm lại các câu đã sai?\n");
+            printf("  " CL_PRIMARY "┃ " CL_KEY "[1] Đồng ý" RESET "  │  " CL_DIM "[0] Thoát" RESET "\n");
+            printf("  " CL_PRIMARY "┃ >> Lựa chọn của bạn: ");
+            if (!safeReadInt(0, 1, &reviewChoice) || reviewChoice == 0) {
                 stop = 1;
-                printf(CL_WARN "\n  ⚠ Ban da chon thoat.\n" RESET);
-            } else {
-                printf(CL_TEXT "\n  Tiep tuc luyen tap cac cau sai...\n" RESET);
-                printf(CL_DIM "  Nhan Enter de sang luot tiep theo..." RESET);
-                getchar();
             }
         }
     }
     
     clearScreen();
-    
+    printf("\n  " CL_PRIMARY "┃ " BG_HIGHLIGHT BOLD " BÁO CÁO KẾT THÚC BÀI HỌC " RESET "\n");
+    printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
     if (stop && totalCorrect < list->vocabCount) {
-        printf(CL_BORDER "  ╔════════════════════════════════════════════════════════════╗\n" RESET);
-        printf(CL_BORDER "  ║" CL_WARN "                     ⏸️  DA DUNG LUYEN TAP ⏸️                    " RESET CL_BORDER "║\n" RESET);
-        printf(CL_BORDER "  ╠════════════════════════════════════════════════════════════╣\n" RESET);
-        printf(CL_BORDER "  ║  Ban da dung lai o luot %-4d                              ║\n", roundCount);
-        printf(CL_BORDER "  ║  So cau da lam dung: " CL_KEY "%-4d/%d" RESET "                              ║\n", totalCorrect, list->vocabCount);
-        printf(CL_BORDER "  ║                                                              ║\n" RESET);
-        printf(CL_BORDER "  ║  " CL_DIM "Hen gap lai ban o lan sau!" RESET "                                ║\n" RESET);
-        printf(CL_BORDER "  ╚════════════════════════════════════════════════════════════╝\n" RESET);
-    } else if (totalCorrect == list->vocabCount) {
-        printf(CL_BORDER "  ╔════════════════════════════════════════════════════════════╗\n" RESET);
-        printf(CL_BORDER "  ║" CL_SUCCESS "                     🎉 CHÚC MỪNG! 🎉                     " RESET CL_BORDER "║\n" RESET);
-        printf(CL_BORDER "  ╠════════════════════════════════════════════════════════════╣\n" RESET);
-        printf(CL_BORDER "  ║  Ban da tra loi dung TAT CA %-4d cau!                        ║\n", list->vocabCount);
-        printf(CL_BORDER "  ║  So luot luyen tap: " CL_KEY "%d" RESET "                                            ║\n", roundCount);
-        printf(CL_BORDER "  ║                                                              ║\n" RESET);
-        printf(CL_BORDER "  ║" CL_SUCCESS "                     ★  HOAN HAO  ★                       " RESET CL_BORDER "║\n" RESET);
-        printf(CL_BORDER "  ╚════════════════════════════════════════════════════════════╝\n" RESET);
+        printf("  " CL_PRIMARY "┃ " CL_WARN "🚨 ĐÃ TẠM DỪNG TIẾN TRÌNH" RESET "\n");
+        printf("  " CL_PRIMARY "┃ • Số vòng đã thực hiện : %d\n", roundCount);
+        printf("  " CL_PRIMARY "┃ • Kết quả hoàn thành   : " CL_PRIMARY "%d/%d" RESET " mục.\n", totalCorrect, list->vocabCount);
+    } else {
+        printf("  " CL_PRIMARY "┃ " CL_SUCCESS "🎉 HOÀN THÀNH XUẤT SẮC!" RESET "\n");
+        printf("  " CL_PRIMARY "┃ • Bạn đã trả lời đúng toàn bộ " CL_SUCCESS BOLD "%d/%d" RESET " câu hỏi.\n", totalCorrect, list->vocabCount);
+        printf("  " CL_PRIMARY "┃ • Tổng số lượt thực hiện: %d\n", roundCount);
     }
+    printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
     
     free(correctFlags);
-    printf(CL_DIM "\n  Nhan Enter de quay lai menu." RESET);
-    getchar(); getchar();
+    printf("\n  ▶ Nhấn Enter để quay lại Menu.");
+    fgets(tempBuf, sizeof(tempBuf), stdin);
 }
 
-// Giải phóng RawDataList
-void freeRawDataList(RawDataList *rawList) {
-    if (!rawList) return;
-    for (int i = 0; i < rawList->count; i++) {
-        free(rawList->data[i]);
-    }
-    free(rawList->data);
-    free(rawList);
-}
+// ==========================================
+// THÀNH PHẦN XỬ LÝ NHẬP LIỆU TỪ BÀN PHÍM (RAW BUFFER)
+// ==========================================
 
-// Hàm đọc dữ liệu từ bàn phím
-RawDataList* readDataFromKeyboard() {
+RawDataList* readDataFromKeyboard(void) {
     RawDataList *rawList = malloc(sizeof(RawDataList));
     if (!rawList) return NULL;
 
@@ -518,18 +482,17 @@ RawDataList* readDataFromKeyboard() {
     rawList->count = 0;
 
     clearScreen();
-    printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-    printf(CL_BORDER "  │" BG_HIGHLIGHT "               NHẬP DỮ LIỆU TỪ BÀN PHÍM                 " RESET CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  ├────────────────────────────────────────────────────────────┤\n" RESET);
-    printf(CL_BORDER "  │  " CL_DIM "- Paste du lieu tu Excel/Google Sheets" RESET "                         │\n" RESET);
-    printf(CL_BORDER "  │  " CL_DIM "- Moi dong la 1 muc (cach nhau bang TAB)" RESET "                     │\n" RESET);
-    printf(CL_BORDER "  │  " CL_DIM "- Du lieu Kanji: Kanji\tHan Viet" RESET "                           │\n" RESET);
-    printf(CL_BORDER "  │  " CL_DIM "- Du lieu Tu vung: Kanji\tFurigana\tRomaji\tNghia" RESET "            │\n" RESET);
-    printf(CL_BORDER "  │  " CL_DIM "- Nhan Enter 2 lan lien tiep de ket thuc" RESET "                 │\n" RESET);
-    printf(CL_BORDER "  └────────────────────────────────────────────────────────────┘\n" RESET);
-    printf(CL_KEY "\n  👉 Bat dau paste du lieu:\n\n" RESET);
+    printf("\n  " CL_PRIMARY "┃ " BG_HIGHLIGHT BOLD " TRÌNH NHẬP DỮ LIỆU THỦ CÔNG " RESET "\n");
+    printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
+    printf("  " CL_PRIMARY "┃ " CL_DIM "Hỗ trợ copy/paste trực tiếp từ Excel hoặc Google Sheets." RESET "\n");
+    printf("  " CL_PRIMARY "┃ " CL_DIM "Định dạng: Các trường ngăn cách bằng ký tự [TAB]." RESET "\n");
+    printf("  " CL_PRIMARY "┃ " CL_DIM "- Du lieu Kanji: Kanji    Hán Việt" RESET "\n" RESET);
+    printf("  " CL_PRIMARY "┃ " CL_DIM "- Du lieu Tu vung: Kanji    Furigana    Romaji    Nghĩa" RESET "\n" RESET);
+    printf("  " CL_PRIMARY "┃ " CL_DIM "⏹  Kết thúc lệnh: Nhấn [Enter] 2 lần liên tiếp." RESET "\n");
+    printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
+    printf("  " CL_PRIMARY "┃ 😏 Hãy paste dữ liệu của bạn vào bên dưới:\n\n");
 
-    char lineBuffer[4096];
+    char lineBuffer[LINE_BUFFER_SIZE];
     int emptyLineCount = 0;
 
     while (1) {
@@ -569,7 +532,6 @@ RawDataList* readDataFromKeyboard() {
     return rawList;
 }
 
-// Chuyển đổi thành KanjiMCList
 KanjiMCList* convertToKanjiMCList(RawDataList *rawList) {
     if (!rawList || rawList->count == 0) return NULL;
     
@@ -578,31 +540,33 @@ KanjiMCList* convertToKanjiMCList(RawDataList *rawList) {
     
     mcList->kanjiCount = rawList->count;
     mcList->arr = malloc(mcList->kanjiCount * sizeof(KanjiMC));
+    if (!mcList->arr) {
+        free(mcList);
+        return NULL;
+    }
     
     for (int i = 0; i < rawList->count; i++) {
         char *lineCopy = strdup(rawList->data[i]);
-        
-        mcList->arr[i].kanji = strdup("");
-        mcList->arr[i].hanViet = strdup("");
+        mcList->arr[i].kanji = NULL;
+        mcList->arr[i].hanViet = NULL;
         
         char *token = strtok(lineCopy, "\t");
         if (token) {
-            free(mcList->arr[i].kanji);
             mcList->arr[i].kanji = strdup(token);
             token = strtok(NULL, "\t");
             if (token) {
-                free(mcList->arr[i].hanViet);
                 mcList->arr[i].hanViet = strdup(token);
             }
         }
         
+        if (!mcList->arr[i].kanji)   mcList->arr[i].kanji = strdup("");
+        if (!mcList->arr[i].hanViet) mcList->arr[i].hanViet = strdup("");
+        
         free(lineCopy);
     }
-    
     return mcList;
 }
 
-// Chuyển đổi thành VocabMCList
 VocabMCList* convertToVocabMCList(RawDataList *rawList) {
     if (!rawList || rawList->count == 0) return NULL;
     
@@ -611,171 +575,150 @@ VocabMCList* convertToVocabMCList(RawDataList *rawList) {
     
     vList->vocabCount = rawList->count;
     vList->arr = malloc(vList->vocabCount * sizeof(VocabMC));
+    if (!vList->arr) {
+        free(vList);
+        return NULL;
+    }
     
     for (int i = 0; i < rawList->count; i++) {
         char *lineCopy = strdup(rawList->data[i]);
-        
-        vList->arr[i].vocab = strdup("");
-        vList->arr[i].furigana = strdup("");
-        vList->arr[i].romaji = strdup("");
-        vList->arr[i].meaning = strdup("");
+        vList->arr[i].vocab    = NULL;
+        vList->arr[i].furigana = NULL;
+        vList->arr[i].romaji   = NULL;
+        vList->arr[i].meaning  = NULL;
         
         char *token = strtok(lineCopy, "\t");
         int fieldIndex = 0;
         
         while (token != NULL && fieldIndex < 4) {
             switch (fieldIndex) {
-                case 0:
-                    free(vList->arr[i].vocab);
-                    vList->arr[i].vocab = strdup(token);
-                    break;
-                case 1:
-                    free(vList->arr[i].furigana);
-                    vList->arr[i].furigana = strdup(token);
-                    break;
-                case 2:
-                    free(vList->arr[i].romaji);
-                    vList->arr[i].romaji = strdup(token);
-                    break;
-                case 3:
-                    free(vList->arr[i].meaning);
-                    vList->arr[i].meaning = strdup(token);
-                    break;
+                case 0: vList->arr[i].vocab    = strdup(token); break;
+                case 1: vList->arr[i].furigana = strdup(token); break;
+                case 2: vList->arr[i].romaji   = strdup(token); break;
+                case 3: vList->arr[i].meaning  = strdup(token); break;
             }
             token = strtok(NULL, "\t");
             fieldIndex++;
         }
         
+        if (!vList->arr[i].vocab)    vList->arr[i].vocab    = strdup("");
+        if (!vList->arr[i].furigana) vList->arr[i].furigana = strdup("");
+        if (!vList->arr[i].romaji)   vList->arr[i].romaji   = strdup("");
+        if (!vList->arr[i].meaning)  vList->arr[i].meaning  = strdup("");
+        
         free(lineCopy);
     }
-    
     return vList;
 }
 
-// Hàm chính cho nhập dữ liệu từ bàn phím
-void runMultipleChoiceWithKeyboardInput() {
+// ==========================================
+// GIAO DIỆN ĐIỀU HƯỚNG CHÍNH (MAIN MENU CONTEXT)
+// ==========================================
+
+void runMultipleChoiceWithKeyboardInput(void) {
     RawDataList *rawList = readDataFromKeyboard();
+    char menuBuf[32];
     if (!rawList) {
-        printf(CL_DIM "\n  Nhan Enter de quay lai..." RESET);
-        getchar();
+        printf("\n  ▶ Nhấn Enter để quay về...");
+        fgets(menuBuf, sizeof(menuBuf), stdin);
         return;
     }
     
-    clearScreen();
-    printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-    printf(CL_BORDER "  │" BG_HIGHLIGHT "                  CHẾ ĐỘ BÀI TẬP                       " RESET CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  ├────────────────────────────────────────────────────────────┤\n" RESET);
-    printf(CL_BORDER "  │  " CL_KEY "[1]" RESET " Trac nghiem Kanji                                  " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  │  " CL_KEY "[2]" RESET " Trac nghiem Tu vung                                " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  │  " CL_KEY "[0]" RESET " Quay lai                                         " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  └────────────────────────────────────────────────────────────┘\n" RESET);
-    printf("\n  " BOLD "Chon [0-2]: " RESET);
-    
-    int mode;
-    if (scanf("%d", &mode) != 1 || mode == 0) {
-        freeRawDataList(rawList);
-        while (getchar() != '\n');
-        return;
-    }
-    getchar();
-    
-    if (mode == 1) {
-        KanjiMCList *mcList = convertToKanjiMCList(rawList);
-        if (mcList && mcList->kanjiCount >= 4) {
-            printf(CL_SUCCESS "\n  ✓ Da tao danh sach %d Kanji.\n" RESET, mcList->kanjiCount);
-            printf(CL_DIM "  Nhan Enter de bat dau trac nghiem..." RESET);
-            getchar();
-            runMultipleChoiceTestKanji(mcList);
+    while (1) {
+        clearScreen();
+        printf("\n  " CL_PRIMARY "┃ " BG_HIGHLIGHT BOLD " LỰA CHỌN CHẾ ĐỘ KIỂM TRA " RESET "\n");
+        printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "[1]" RESET " Trắc nghiệm Kanji (Kanji / Hán Việt) \n");
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "[2]" RESET " Trắc nghiệm Từ vựng (Kanji / Kana / Romaji / Tiếng Việt)\n");
+        printf("  " CL_PRIMARY "┃ " CL_DIM BOLD "[0]" RESET " Quay lại\n");
+        printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
+        
+        int mode = 0;
+        printf("\n  " CL_PRIMARY "┃ >> Chọn [0-2]: ");
+        if (!safeReadInt(0, 2, &mode) || mode == 0) {
+            freeRawDataList(rawList);
+            return;
+        }
+        
+        if (mode == 1) {
+            KanjiMCList *mcList = convertToKanjiMCList(rawList);
+            if (mcList && mcList->kanjiCount >= MIN_REQUIRED_QA) {
+                runMultipleChoiceTestKanji(mcList);
+            } else {
+                printf("\n  " CL_PRIMARY "┃ " CL_ERROR "❌ THẤT BẠI: Dữ liệu chứa %d mục (Yêu cầu ≥ %d)." RESET "\n", mcList ? mcList->kanjiCount : 0, MIN_REQUIRED_QA);
+                fgets(menuBuf, sizeof(menuBuf), stdin);
+            }
             freeKanjiMCList(mcList);
-        } else {
-            printf(CL_WARN "\n  ⚠ Khong du du lieu (can it nhat 4 Kanji).\n" RESET);
-            printf(CL_DIM "  Nhan Enter de tiep tuc..." RESET);
-            getchar();
-        }
-    } else if (mode == 2) {
-        VocabMCList *vList = convertToVocabMCList(rawList);
-        if (vList && vList->vocabCount >= 4) {
-            printf(CL_SUCCESS "\n  ✓ Da tao danh sach %d tu vung.\n" RESET, vList->vocabCount);
-            printf(CL_DIM "  Nhan Enter de bat dau trac nghiem..." RESET);
-            getchar();
-            runMultipleChoiceTestVocab(vList);
+        } else if (mode == 2) {
+            VocabMCList *vList = convertToVocabMCList(rawList);
+            if (vList && vList->vocabCount >= MIN_REQUIRED_QA) {
+                runMultipleChoiceTestVocab(vList);
+            } else {
+                printf("\n  " CL_PRIMARY "┃ " CL_ERROR "❌ THẤT BẠI: Dữ liệu chứa %d mục (Yêu cầu ≥ %d)." RESET "\n", vList ? vList->vocabCount : 0, MIN_REQUIRED_QA);
+                fgets(menuBuf, sizeof(menuBuf), stdin);
+            }
             freeVocabMCList(vList);
-        } else {
-            printf(CL_WARN "\n  ⚠ Khong du du lieu (can it nhat 4 tu vung).\n" RESET);
-            printf(CL_DIM "  Nhan Enter de tiep tuc..." RESET);
-            getchar();
         }
     }
-    
-    freeRawDataList(rawList);
 }
 
 void runChoiceOption(KanjiList *L) {
     if (!L || L->kanjiCount == 0) return;
-    
     int totalLessons = (L->kanjiCount + KANJI_PER_LESSON - 1) / KANJI_PER_LESSON;
-    int lessonChoice;
     
     clearScreen();
-    printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-    printf(CL_BORDER "  │" BG_HIGHLIGHT "                     MENU BÀI TẬP                       " RESET CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  ├────────────────────────────────────────────────────────────┤\n" RESET);
-    printf(CL_BORDER "  │  " CL_KEY "[1]" RESET " Chon bai hoc [1-%d]                                 " CL_BORDER "│\n", totalLessons);
-    printf(CL_BORDER "  │  " CL_KEY "[2]" RESET " Nhap du lieu tu ban phim                           " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  │  " CL_KEY "[0]" RESET " Quay lai                                         " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  └────────────────────────────────────────────────────────────┘\n" RESET);
-    printf("\n  " BOLD "Chon: " RESET);
+    printf("\n  " CL_PRIMARY "┃ " BG_HIGHLIGHT BOLD " HỆ THỐNG TẠO TRẮC NGHIỆM " RESET "\n");
+    printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
+    printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "[1]" RESET " Chọn bài học trong sách [Bài 1 - %d]\n", totalLessons);
+    printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "[2]" RESET " Nạp dữ liệu thủ công (Keyboard Paste)\n");
+    printf("  " CL_PRIMARY "┃ " CL_DIM BOLD "[0]" RESET " Quay lại\n");
+    printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
     
-    int mainChoice;
-    if (scanf("%d", &mainChoice) != 1 || mainChoice == 0) {
-        while (getchar() != '\n');
+    int mainChoice = 0;
+    printf("\n  " CL_PRIMARY "┃ >> Chọn phương thức: ");
+    if (!safeReadInt(0, 2, &mainChoice) || mainChoice == 0) {
         return;
     }
-    getchar();
     
     if (mainChoice == 2) {
         runMultipleChoiceWithKeyboardInput();
         return;
     }
     
-    printf(CL_TEXT "\n  Chon bai [1-%d]: " RESET, totalLessons);
-    scanf("%d", &lessonChoice); getchar();
-
-    if (lessonChoice < 1 || lessonChoice > totalLessons) {
-        printf(CL_ERROR "  ⚠ Bai hoc khong hop le!\n" RESET);
-        printf(CL_DIM "  Nhan Enter de quay lai..." RESET);
-        getchar();
-        return;
+    int lessonChoice = 0;
+    while (1) {
+        printf("  " CL_PRIMARY "┃ >> Chọn bài học [1-%d]: ", totalLessons);
+        if (safeReadInt(1, totalLessons, &lessonChoice)) break;
+        printf("  " CL_PRIMARY "┃ " CL_ERROR "❌ Bài học không tồn tại. Vui lòng chọn lại!\" RESET \"\\n\");\n");
     }
 
-    int start, end;
-    start = (lessonChoice - 1) * KANJI_PER_LESSON;
-    end   = start + KANJI_PER_LESSON;
+    int start = (lessonChoice - 1) * KANJI_PER_LESSON;
+    int end   = start + KANJI_PER_LESSON;
     if (end > L->kanjiCount) end = L->kanjiCount;
 
     clearScreen();
-    printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-    printf(CL_BORDER "  │" BG_HIGHLIGHT "                  CHẾ ĐỘ BÀI TẬP                       " RESET CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  ├────────────────────────────────────────────────────────────┤\n" RESET);
-    printf(CL_BORDER "  │  " CL_KEY "[1]" RESET " Trac nghiem Kanji                                  " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  │  " CL_KEY "[2]" RESET " Trac nghiem Tu vung                                " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  │  " CL_KEY "[0]" RESET " Quay lai                                         " CL_BORDER "│\n" RESET);
-    printf(CL_BORDER "  └────────────────────────────────────────────────────────────┘\n" RESET);
-    printf("\n  " BOLD "Chon: " RESET);
-
-    int mode;
-    if (scanf("%d", &mode) != 1 || mode == 0) {
-        while (getchar() != '\n');
-        return;
-    }
+    printf("\n  " CL_PRIMARY "┃ " BG_HIGHLIGHT BOLD " LỰA CHỌN PHÂN HỆ KIỂM TRA " RESET "\n");
+    printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
+    printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "[1]" RESET " Trắc nghiệm Kanji (Kanji / Hán Việt) \n");
+    printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "[2]" RESET " Trắc nghiệm Từ vựng (Kanji / Kana / Romaji / Tiếng Việt)\n");
+    printf("  " CL_PRIMARY "┃ " CL_DIM BOLD "[0]" RESET " Quay lại\n");
+    printf("  " CL_PRIMARY "┃ ──────────────────────────────────────────────────────────────\n");
+    
+    int mode = 0;
+    printf("\n  " CL_PRIMARY "┃ >> Chọn chế độ: ");
+    if (!safeReadInt(0, 2, &mode) || mode == 0) return;
 
     if (mode == 1) {
         KanjiMCList *mcList = mapToKanjiMCRange(L, start, end);
-        runMultipleChoiceTestKanji(mcList);
-        freeKanjiMCList(mcList);
+        if (mcList) {
+            runMultipleChoiceTestKanji(mcList);
+            freeKanjiMCList(mcList);
+        }
     } else if (mode == 2) {
         VocabMCList *vList = mapToVocabMCRange(L, start, end);
-        runMultipleChoiceTestVocab(vList); 
-        freeVocabMCList(vList);
+        if (vList) {
+            runMultipleChoiceTestVocab(vList); 
+            freeVocabMCList(vList);
+        }
     }
 }

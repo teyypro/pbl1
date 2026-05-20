@@ -47,26 +47,30 @@ int levenshteinDistance(wchar_t *s1, wchar_t *s2) {
     return res;
 }
 
-void printFuzzyResult(int gap, Vocab *v) {
-    char gapStr[10];
+
+
+void printFuzzyResult(int gap, Vocab *v, int counter) {
+    if (!v) return;
+
+    // Nhãn hiển thị mức độ khớp (Match Tag) để tăng tính trực quan cho Dashboard
+    char tagStr[32];
     if (gap == 0) {
-        strcpy(gapStr, "EXACT");
+        sprintf(tagStr, CL_SUCCESS "[EXACT]" RESET);
     } else {
-        sprintf(gapStr, "%d", gap);
+        sprintf(tagStr, CL_DIM "[GAP: %d]" RESET, gap);
     }
-    
-    char tagStr[40];
-    if (gap == 0) {
-        sprintf(tagStr, CL_SUCCESS "[%s]" RESET, gapStr); 
-    } else {
-        sprintf(tagStr, CL_DIM "[%s]" RESET, gapStr);
-    }
-    
-    printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
-    printf(CL_BORDER "  │ " CL_LOGO "📖 %-40s " CL_BORDER "│\n" RESET, v->vocab);
-    printf(CL_BORDER "  │ " CL_TEXT "💬 %-44s " CL_BORDER "│\n" RESET, v->hiragana);
-    printf(CL_BORDER "  │ " CL_KEY "🔍 %-44s " CL_BORDER "│\n" RESET, v->meaning);
-    printf(CL_BORDER "  └────────────────────────────────────────────────────────────┘\n" RESET);
+
+    // Xây dựng dòng tiêu đề cột đối xứng phẳng (Flat symmetric columns row) đính kèm Tag khoảng cách
+    printf("  " CL_PRIMARY "┃ " RESET CL_LOGO BOLD "%02d. " RESET CL_KANJI BOLD "%s " RESET 
+            CL_DIM "(" RESET CL_KANA "%s" RESET CL_DIM " • " RESET CL_ROMAJI "%s" RESET CL_DIM ") " RESET CL_MEANING "%s" RESET CL_DIM " %s\n", 
+            counter, 
+            v->vocab, 
+            v->hiragana, 
+            v->romaji,
+            v->meaning,
+            tagStr
+        );
+
 }
 
 void fuzzySearching(KanjiList *L, char *inputUTF8, int option) {
@@ -76,8 +80,7 @@ void fuzzySearching(KanjiList *L, char *inputUTF8, int option) {
     int gap;
     size_t inputLen = wcslen(wInput);
 
-    printf("  " CL_PRIMARY "📊 KẾT QUẢ TÌM KIẾM MỜ\n" RESET);
-    printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────┐\n" RESET);
+
 
     for (i = 0; i < L->kanjiCount; i++) {
         for (j = 0; j < L->kanjis[i].vocabsCount; j++) {
@@ -100,18 +103,17 @@ void fuzzySearching(KanjiList *L, char *inputUTF8, int option) {
             }
 
             if (gap <= MAX_GAP) {
-                printFuzzyResult(gap, v);
                 foundCount++;
+                printFuzzyResult(gap, v, foundCount);
             }
         }
     }
     
-    printf(CL_BORDER "  └────────────────────────────────────────────────────────────┘\n" RESET);
     
     if (foundCount == 0) {
-        printf("\n  " CL_WARN "⚠ Không tìm thấy kết quả nào phù hợp.\n" RESET);
+        printf("  " CL_WARN "⚠ Không tìm thấy kết quả nào phù hợp.\n" RESET);
     } else {
-        printf("\n  " CL_SUCCESS "✓ Tìm thấy %d kết quả\n" RESET, foundCount);
+        printf("  " CL_SUCCESS "✓ Tìm thấy %d kết quả phù hợp.\n" RESET, foundCount);
     }
     
     free(wInput);

@@ -58,11 +58,22 @@ int KMPsearch(wchar_t *pat, wchar_t *txt) {
     return 0;
 }
 
-void printSubstringResult(Vocab *v) {
-    printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────────────────────┐\n" RESET);
-    printf(CL_BORDER "  │ " CL_LOGO "%-20s" CL_BORDER " │ " CL_TEXT "%-20s" CL_BORDER " │ " CL_TEXT "%-20s" CL_BORDER " │ " CL_KEY "%-30s" CL_BORDER " │\n" RESET,
-           v->vocab, v->hiragana, v->romaji, v->meaning);
-    printf(CL_BORDER "  └────────────────────────────────────────────────────────────────────────────┘\n" RESET);
+// ==================================================================
+// THÀNH PHẦN UPDATE STYLE DASHBOARD (ĐỒNG BỘ VỚI FUZZY_SEARCH)
+// ==================================================================
+
+void printSubstringResult(Vocab *v, int counter) {
+    if (!v) return;
+
+    // Xây dựng dòng tiêu đề cột đối xứng phẳng (Flat symmetric columns row) đồng bộ hệ màu
+    printf("  " CL_PRIMARY "┃ " RESET CL_LOGO BOLD "%02d. " RESET CL_KANJI BOLD "%s " RESET 
+            CL_DIM "(" RESET CL_KANA "%s" RESET CL_DIM " • " RESET CL_ROMAJI "%s" RESET CL_DIM ") " RESET CL_MEANING "%s\n", 
+            counter, 
+            v->vocab, 
+            v->hiragana, 
+            v->romaji,
+            v->meaning
+        );
 }
 
 void substringSearching(KanjiList *L, char *inputUTF8, int option) {
@@ -70,10 +81,6 @@ void substringSearching(KanjiList *L, char *inputUTF8, int option) {
     int foundCount = 0;
     size_t inputLen = wcslen(wInput);
     
-    printf("  " CL_PRIMARY "📊 KẾT QUẢ TÌM KIẾM MẪU (KMP)\n" RESET);
-    printf(CL_BORDER "  ┌────────────────────────────────────────────────────────────────────────────┐\n" RESET);
-    printf(CL_BORDER "  │ " CL_HEADER "TỪ VỰNG              " CL_BORDER "│ " CL_HEADER "HIRAGANA             " CL_BORDER "│ " CL_HEADER "ROMAJI               " CL_BORDER "│ " CL_HEADER "NGHĨA" CL_BORDER "                       │\n" RESET);
-    printf(CL_BORDER "  ├────────────────────────────────────────────────────────────────────────────┤\n" RESET);
 
     for (int i = 0; i < L->kanjiCount; i++) {
         for (int j = 0; j < L->kanjis[i].vocabsCount; j++) {
@@ -88,18 +95,17 @@ void substringSearching(KanjiList *L, char *inputUTF8, int option) {
             }
 
             if (target_w && KMPsearch(wInput, target_w)) {
-                printSubstringResult(v);
                 foundCount++;
+                printSubstringResult(v, foundCount);
             }
         }
     }
     
-    printf(CL_BORDER "  └────────────────────────────────────────────────────────────────────────────┘\n" RESET);
     
     if (foundCount == 0) {
-        printf("\n  " CL_WARN "⚠ Không tìm thấy kết quả nào phù hợp với mẫu: " CL_LOGO "%s\n" RESET, inputUTF8);
+        printf("  " CL_WARN "⚠ Không tìm thấy kết quả nào phù hợp với mẫu: " CL_LOGO "%s\n" RESET, inputUTF8);
     } else {
-        printf("\n  " CL_SUCCESS "✓ Tìm thấy %d kết quả\n" RESET, foundCount);
+        printf("  " CL_SUCCESS "✓ Tìm thấy %d kết quả phù hợp.\n" RESET, foundCount);
     }
     
     free(wInput);
