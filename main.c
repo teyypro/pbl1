@@ -12,13 +12,14 @@
 
 
 int main() {
-    configUTF8();
+    // Ép Windows hiển thị UTF-8
+    configUTF8(); 
 
     const char *fileAddress = "data/kanjiData.json";
     char *rawJson = readFileToString(fileAddress);
 
     if (!rawJson) {
-        printf("Không tìm th?y file: %s\n", fileAddress);
+        printf("Không tìm thấy file: %s\n", fileAddress);
         return 1;
     }
 

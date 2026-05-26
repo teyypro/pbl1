@@ -9,12 +9,12 @@
 #include "vocab_search_exact.h"
 #include "fuzzy_search.h"
 #include "substring_search.h"
+#include "prefix_search.h"
 #include "multiple_choice.h"
 #include "lessons_management.h"
 #include "filter_learned_lesson.h"
 #include "sentence_analysis.h"
 #include "parse_json_to_struct.h"
-#include "prefix_search.h"
 #include "utils.h"
 #include "../data_structures.h"
 #include "dashboard.h"
@@ -233,6 +233,7 @@ void menuKMPSearch(KanjiList *L) {
         getchar();
     }
 }
+
 void menuFuzzySearch(KanjiList *L) {
     int option;
     char keyword[256];
@@ -478,7 +479,7 @@ void caseNo1(KanjiList *L, HashTable *vHT, HashTableK *kHT, TrieNode *trieRoot) 
 }
 
 void caseNo2(KanjiList *L) {
-    system("cls");
+    clearScreen();
     displayAllLessons(L);
     selectAndDisplayLesson(L);
 }
@@ -487,14 +488,13 @@ void caseNo3(KanjiList *L) {
     runFilterLearnedVocab(L);
 }
 
-void caseNo5(KanjiList *L) {
-    runChoiceOption(L);
-}
-
 void caseNo4(KanjiList *L) {
     analyzeJapaneseSentence(L);
 }
 
+void caseNo5(KanjiList *L) {
+    runChoiceOption(L);
+}
 
 void handleMenuSelection(char *rawJson) {
     int choice;
@@ -507,7 +507,7 @@ void handleMenuSelection(char *rawJson) {
     buildHashTableForKanji(&myData, kanjiHT);
 
     while (1) {
-        system("cls");
+        clearScreen();
         displayMenu();
         if (scanf("%d", &choice) != 1) {
             printf("Vui long nhap so hop le.\n");

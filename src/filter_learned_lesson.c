@@ -80,11 +80,11 @@ void runFilterLearnedVocab(KanjiList *allData) {
         return;
     }
     
-    system("cls || clear");
+    clearScreen();
     printf("\n  " BG_HIGHLIGHT BOLD " LỌC CÁC TỪ VỰNG CHỈ CHỨA CÁC KANJI ĐÃ HỌC " RESET"\n");
     printf(CL_BORDER "──────────────────────────────────────────────────────────────────\n" RESET);
     
-    printf("  " CL_TEXT "Nhập các bài đã học cần trích xuất từ vựng (cách nhau bởi 1 space, kết thúc bằng số 0):\n" RESET);
+    printf("  " CL_TEXT "Nhập các bài học cần trích xuất từ vựng (nhập 0 để kết thúc):\n" RESET);
     printf("   >> " CL_LOGO BOLD);
     
     int selected[50] = {0};

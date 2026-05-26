@@ -37,7 +37,7 @@ void displayAllLessons(KanjiList *L) {
 void displayDetailedKanji(Kanji *k) {
     if (k == NULL) return;
 
-    system("cls || clear");
+    clearScreen();
     
     printf("\n  " BG_HIGHLIGHT BOLD " THÔNG TIN CHI TIẾT KANJI " RESET"\n\n");
 
@@ -145,7 +145,7 @@ void selectAndDisplayLesson(KanjiList *L) {
     if (endIndex > L->kanjiCount) endIndex = L->kanjiCount;
 
     while (1) {
-        system("cls || clear");
+        clearScreen();
         
         printf("\n  " BG_HIGHLIGHT BOLD " BÀI %02d : DANH SÁCH KANJI " RESET "\n", lessonChoice);
     
