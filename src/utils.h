@@ -64,5 +64,4 @@ int isKanjiWChar(wchar_t wc);
 void inputString(char *buffer, int maxLength);
 void clearScreen(void);
 void waitForEnter(void);
-void pauseAndClear(void);
 #endif

@@ -25,12 +25,7 @@ typedef struct {
     VocabMC *arr;
 } VocabMCList;
 
-KanjiMCList* mapToKanjiMCRange(KanjiList *L, int start, int end);
-VocabMCList* mapToVocabMCRange(KanjiList *L, int start, int end);
-char* getKanjiDataByType(KanjiMC *item, int type);
-void runMultipleChoiceTestKanji(KanjiMCList *list);
+
 void runChoiceOption(KanjiList *L);
-char* getVocabDataByType(VocabMC *item, int type);
-void runMultipleChoiceTestVocab(VocabMCList *list);
 
 #endif

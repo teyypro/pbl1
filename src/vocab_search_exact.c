@@ -30,7 +30,7 @@ HashNode* createHashNode(char *key, Vocab* vocab) {
     return newNode;
 }
 
-int hashGetIndex(char *str, int tableSize) {
+static int hashGetIndex(char *str, int tableSize) {
     unsigned long hash = 5381; 
     int c;
     while ((c = *str++)) {
@@ -107,7 +107,7 @@ void printOutVocab(Vocab *v) {
     printf("  " CL_PRIMARY "┃\n" RESET);
 }
 
-void exactlySearching(HashTable *ht, char *key) {
+void exactlySearchingVocab(HashTable *ht, char *key) {
     if (!ht || !key) return;
     
     int index = hashGetIndex(key, ht->size);

@@ -31,7 +31,7 @@ HashNodeK* createHashNodeK(char *key, Kanji* kanji) {
     return newNode;
 }
 
-int hashGetIndex(char *str, int tableSize) {
+static int hashGetIndex(char *str, int tableSize) {
     unsigned long hash = 5381; 
     int c;
     while ((c = *str++)) {

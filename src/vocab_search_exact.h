@@ -20,11 +20,7 @@ typedef struct HashNodeForVocab HashNode;
 typedef struct HashTableForVocab HashTable;
 
 HashTable* createHashTable(int size);
-HashNode* createHashNode(char *key, Vocab* vocab);
-static int hashGetIndex(char *str, int tableSize);
-void insertVocabToHT(HashTable *ht, char *key, Vocab *vocab);
 void buildHashTableForVocab(KanjiList *L, HashTable *ht);
-void printOutVocab(Vocab *v);
-void exactlySearching(HashTable *ht, char *key);
+void exactlySearchingVocab(HashTable *ht, char *key);
 
 #endif

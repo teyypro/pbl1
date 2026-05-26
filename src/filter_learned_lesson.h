@@ -16,8 +16,6 @@ typedef struct LearnedVocabList {
     int count;          // Tổng số từ vựng tìm thấy
 } LearnedVocabList;
 
-LearnedVocabList* createLearnedList();
-void addLearnedVocab(LearnedVocabList *L, Vocab *v);
 void runFilterLearnedVocab(KanjiList *allData);
 
 #endif

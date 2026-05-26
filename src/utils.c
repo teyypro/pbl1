@@ -77,18 +77,11 @@ void inputString(char *buffer, int maxLength) {
 }
 
 void clearScreen(void) {
-    printf("\x1b[2J\x1b[H");
+    //printf("\x1b[2J\x1b[H");
+    system("cls");
 }
 
 void waitForEnter(void) {
     printf("\n  " CL_DIM ">> Nhấn Enter để tiếp tục..." RESET);
     getchar();
-}
-
-
-void pauseAndClear(void) {
-    printf("\n\n  " CL_BORDER "────────────────────────────────────────────────────────────" RESET);
-    printf("\n  " BOLD "  [!] " RESET "Hệ thống đã sẵn sàng. Nhấn " BG_HIGHLIGHT " Enter " RESET " để tiếp tục...");
-    getchar();
-    printf("\x1b[2J\x1b[H");
 }

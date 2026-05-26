@@ -248,7 +248,7 @@ void runMultipleChoiceTestKanji(KanjiMCList *list) {
 
             int choice = -1;
             while (1) {
-                printf("\n  " CL_PRIMARY "┃ " BOLD ">> Bạn chọn [0-4]: " RESET);
+                printf("\n  " CL_PRIMARY "┃ " CL_DIM ">> Bạn chọn [0-4]: " RESET);
                 if (safeReadInt(0, 4, &choice)) break;
                 printf("  " CL_PRIMARY "┃ " CL_ERROR "❌ Vui lòng chỉ nhập số thứ tự từ 1 đến 4!" RESET "\n");
             }
@@ -404,7 +404,7 @@ void runMultipleChoiceTestVocab(VocabMCList *list) {
 
             int choice = -1;
             while (1) {
-                printf("\n  " CL_PRIMARY "┃ " BOLD ">> Bạn chọn [0-4]: " RESET);
+                printf("\n  " CL_PRIMARY "┃ " CL_DIM ">> Bạn chọn [0-4]: " RESET);
                 if (safeReadInt(0, 4, &choice)) break;
                 printf("  " CL_PRIMARY "┃ " CL_ERROR "❌ Vui lòng chỉ nhập số thứ tự từ 1 đến 4!" RESET "\n");
             }

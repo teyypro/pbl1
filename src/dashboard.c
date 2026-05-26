@@ -129,7 +129,7 @@ void menuExactSearch(HashTable *vocabHT, HashTableK *kanjiHT) {
     
         
         // 5. TRANG HIỂN THỊ KẾT QUẢ (RESULTS PAGE)
-        printf("\x1b[2J\x1b[H"); 
+        clearScreen();
         printf("\n");
         printf("  " BG_HIGHLIGHT BOLD "  KẾT QUẢ TRA CỨU DỮ LIỆU  " RESET);
         printf("  " CL_DIM "Từ khóa:" RESET " \"" CL_LOGO BOLD "%s" RESET "\"\n", keyword);
@@ -139,7 +139,7 @@ void menuExactSearch(HashTable *vocabHT, HashTableK *kanjiHT) {
         if (choice == 1) {
             exactlySearchingKanji(kanjiHT, keyword);
         } else {
-            exactlySearching(vocabHT, keyword);
+            exactlySearchingVocab(vocabHT, keyword);
         }
         
         // Thanh footer dừng xem kết quả
@@ -218,7 +218,7 @@ void menuKMPSearch(KanjiList *L) {
         printf(RESET);
         
         // 5. TRANG HIỂN THỊ KẾT QUẢ (RESULTS PAGE)
-        printf("\x1b[2J\x1b[H"); 
+        clearScreen();
         printf("\n");
         printf("  " BG_HIGHLIGHT BOLD "  KẾT QUẢ TRA CỨU DỮ LIỆU  " RESET);
         printf("  " CL_DIM "Từ khóa:" RESET " \"" CL_LOGO BOLD "%s" RESET "\"\n", keyword);
@@ -304,7 +304,7 @@ void menuFuzzySearch(KanjiList *L) {
         
 
         // 5. TRANG HIỂN THỊ KẾT QUẢ (RESULTS PAGE)
-        printf("\x1b[2J\x1b[H"); 
+        clearScreen();
         printf("\n");
         printf("  " BG_HIGHLIGHT BOLD "  KẾT QUẢ TRA CỨU DỮ LIỆU  " RESET);
         printf("  " CL_DIM "Từ khóa:" RESET " \"" CL_LOGO BOLD "%s" RESET "\"\n", keyword);
@@ -377,7 +377,7 @@ void menuPrefixSearch(TrieNode *trieRoot) {
         printf(RESET);
         
         // 5. TRANG HIỂN THỊ KẾT QUẢ (RESULTS PAGE)
-        printf("\x1b[2J\x1b[H"); 
+        clearScreen();
         printf("\n");
         printf("  " BG_HIGHLIGHT BOLD "  KẾT QUẢ TRA CỨU DỮ LIỆU  " RESET);
         printf("  " CL_DIM "Từ khóa:" RESET " \"" CL_LOGO BOLD "%s" RESET "\"\n", keyword);
@@ -409,7 +409,7 @@ void caseNo1(KanjiList *L, HashTable *vHT, HashTableK *kHT, TrieNode *trieRoot) 
     int choice;
     while(1) {
         // Xóa màn hình và đưa con trỏ về góc trên bên trái
-        printf("\x1b[2J\x1b[H"); 
+        clearScreen();
         
         // 1. THANH DIỀU HƯỚNG SUB-HEADER (Hiện đại, tối giản)
         printf("\n");
@@ -517,11 +517,11 @@ void handleMenuSelection(char *rawJson) {
         getchar();
 
         switch (choice) {
-            case 1: caseNo1(&myData, vocabHT, kanjiHT, trieRoot); getchar(); break;
-            case 2: caseNo2(&myData); getchar(); break;
-            case 3: caseNo3(&myData); getchar(); break;
-            case 4: caseNo4(&myData); getchar(); break;
-            case 5: caseNo5(&myData); getchar(); break;
+            case 1: caseNo1(&myData, vocabHT, kanjiHT, trieRoot); break;
+            case 2: caseNo2(&myData); break;
+            case 3: caseNo3(&myData); break;
+            case 4: caseNo4(&myData); break;
+            case 5: caseNo5(&myData); break;
             case 0:
                 printf("Dang thoat chuong trinh...\n");
                 freeTrie(trieRoot);

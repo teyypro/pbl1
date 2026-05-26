@@ -161,16 +161,15 @@ void selectAndDisplayLesson(KanjiList *L) {
         printf(CL_DIM ">> Nhập số thứ tự để xem chi tiết Kanji (0 để thoát):" RESET " " CL_LOGO BOLD);
         scanf("%d", &kanjiIdx);
         printf(RESET);
-        getchar();
 
         if (kanjiIdx == 0) break;
         
         if (kanjiIdx < startIndex + 1 || kanjiIdx > endIndex) {
             printf("  " CL_ERROR "🚨 [LỖI] Lựa chọn không hợp lệ. Vui lòng nhập lại.\n" RESET);
-            printf("  " CL_DIM "Nhấn Enter để tiếp tục..." RESET);
             getchar();
             continue;
         }
         displayDetailedKanji(&L->kanjis[kanjiIdx - 1]);
+        getchar();
     }
 }

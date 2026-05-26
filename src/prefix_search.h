@@ -17,16 +17,9 @@ struct TrieNodeInfo {
     int vocabsCount;
 };
 
-// ─── CÁC HÀM QUẢN LÝ CẤU TRÚC ĐỒ THỊ/CÂY TRIE ───────────────────────────
-TrieNode* createTrieNode();
-int getCharIndex(char c);
-void insertTrie(TrieNode *root, const char *key, Vocab *vocab);
 TrieNode* buildTrieFromKanjiList(KanjiList *L);
 TrieNode* searchPrefixNode(TrieNode *root, const char *prefix);
-void freeTrie(TrieNode *root);
-
-// ─── CÁC HÀM HIỂN THỊ VÀ GIAO DIỆN MENU ─────────────────────────────────
-void printVocabDetails(Vocab *v);
 void printAllWordsFromNode(TrieNode *node, int *counter);
+void freeTrie(TrieNode *root);
 
 #endif
