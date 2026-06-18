@@ -23,8 +23,7 @@
 void displayMenu(void) {
     // 1. TIÊU ĐỀ HỆ THỐNG (Căn chỉnh khoảng trống lý tưởng, tối giản thanh lịch)
     printf("\n");
-    printf("  " BG_HIGHLIGHT BOLD "  TỪ ĐIỂN 512 KANJILOOK&LEARN  " RESET);
-    printf("  " CL_DIM "│  ##" RESET "\n");
+    printf("  " BG_HIGHLIGHT BOLD "  TỪ ĐIỂN 512 KANJI  \n" RESET);
     printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
 
     // 2. DANH SÁCH TÁC VỤ (Cấu trúc Flat-List đối xứng cao độ)
@@ -63,7 +62,7 @@ void displayMenu(void) {
 
     // 3. THANH TRẠNG THÁI VÀ KHU VỰC NHẬP LỆNH (COMMAND PROMPT)
     printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
-    printf("  " CL_DIM "Hướng dẫn:" RESET " Chọn số [" CL_PRIMARY "1-5" RESET "] để khởi chạy chức năng " CL_DIM "│" RESET " Chọn [" CL_ERROR "0" RESET "] để thoát\n");
+    printf("  " CL_DIM "Hướng dẫn:" RESET " Chọn chức năng số [" CL_PRIMARY "1-5" RESET "] " CL_DIM "│" RESET " [" CL_ERROR "0" RESET "] để thoát\n");
     printf("  " BOLD "Lựa chọn của bạn" RESET " " CL_PRIMARY "» " RESET);
 }
 
@@ -83,18 +82,18 @@ void menuExactSearch(HashTable *vocabHT, HashTableK *kanjiHT) {
         printf("  " CL_PRIMARY "┃ " CL_BORDER "──────────────────────────────────────────────────────────────" RESET "\n");
 
         // Chức năng 01
-        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "01" RESET "  │  ⛩️   " CL_TEXT "%-35s" RESET "\n", 
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "01" RESET "  │  " CL_TEXT "%-35s" RESET "\n", 
                "Tra cứu Kanji (Kí tự / Hán Việt)");
         
         // Chức năng 02
-        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "02" RESET "  │  📖  " CL_TEXT "%-35s" RESET "\n", 
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "02" RESET "  │  " CL_TEXT "%-35s" RESET "\n", 
                "Tra cứu Từ vựng (Kanji / Hiragana / Katakana / Romaji / Tiếng Việt)");
 
         // Phân tách hệ thống
         printf("  " CL_PRIMARY "┃ " CL_BORDER "──────────────────────────────────────────────────────────────" RESET "\n");
         
         // Lệnh quay lại
-        printf("  " CL_PRIMARY "┃ " CL_DIM BOLD "00" RESET "  │  ↩️   " CL_DIM "%-35s" RESET "\n", 
+        printf("  " CL_PRIMARY "┃ " CL_DIM BOLD "00" RESET "  │  " CL_DIM "%-35s" RESET "\n", 
                "Quay lại Menu tìm kiếm");
         
         printf("  " CL_PRIMARY "┃" RESET "\n");
@@ -133,7 +132,7 @@ void menuExactSearch(HashTable *vocabHT, HashTableK *kanjiHT) {
         printf("\n");
         printf("  " BG_HIGHLIGHT BOLD "  KẾT QUẢ TRA CỨU DỮ LIỆU  " RESET);
         printf("  " CL_DIM "Từ khóa:" RESET " \"" CL_LOGO BOLD "%s" RESET "\"\n", keyword);
-        printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n\n");
+        printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
         
         // Gọi hàm xử lý logic tìm kiếm core
         if (choice == 1) {
@@ -165,26 +164,26 @@ void menuKMPSearch(KanjiList *L) {
         printf("  " CL_PRIMARY "┃ " CL_BORDER "──────────────────────────────────────────────────────────────" RESET "\n");
 
         // Chức năng 01
-        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "01" RESET "  │  ⛩️   " CL_TEXT "%-35s" RESET "\n", 
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "01" RESET "  │  " CL_TEXT "%-35s" RESET "\n", 
                "Khớp theo mặt chữ Kanji");
         
         // Chức năng 02
-        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "02" RESET "  │  🎋  " CL_TEXT "%-35s" RESET "\n", 
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "02" RESET "  │  " CL_TEXT "%-35s" RESET "\n", 
                "Khớp theo cách đọc Hiragana");
         
         // Chức năng 03
-        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "03" RESET "  │  🔡  " CL_TEXT "%-35s" RESET "\n", 
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "03" RESET "  │  " CL_TEXT "%-35s" RESET "\n", 
                "Khớp theo phiên âm Romaji");
         
         // Chức năng 04
-        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "04" RESET "  │  🇻🇳  " CL_TEXT "%-35s" RESET "\n", 
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "04" RESET "  │  " CL_TEXT "%-35s" RESET "\n", 
                "Khớp theo nghĩa Tiếng Việt");
 
         // Phân tách hệ thống
         printf("  " CL_PRIMARY "┃ " CL_BORDER "──────────────────────────────────────────────────────────────" RESET "\n");
         
         // Lệnh quay lại
-        printf("  " CL_PRIMARY "┃ " CL_DIM BOLD "00" RESET "  │  ↩️   " CL_DIM "%-35s" RESET "\n", 
+        printf("  " CL_PRIMARY "┃ " CL_DIM BOLD "00" RESET "  │  " CL_DIM "%-35s" RESET "\n", 
                "Quay lại Menu tìm kiếm");
         
         printf("  " CL_PRIMARY "┃" RESET "\n");
@@ -222,7 +221,7 @@ void menuKMPSearch(KanjiList *L) {
         printf("\n");
         printf("  " BG_HIGHLIGHT BOLD "  KẾT QUẢ TRA CỨU DỮ LIỆU  " RESET);
         printf("  " CL_DIM "Từ khóa:" RESET " \"" CL_LOGO BOLD "%s" RESET "\"\n", keyword);
-        printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n\n");
+        printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
         
         // Gọi bộ xử lý logic tìm kiếm chuỗi con
         substringSearching(L, keyword, option);
@@ -250,26 +249,26 @@ void menuFuzzySearch(KanjiList *L) {
         printf("  " CL_PRIMARY "┃ " CL_BORDER "──────────────────────────────────────────────────────────────" RESET "\n");
 
         // Chức năng 01
-        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "01" RESET "  │  🌫️  " CL_TEXT "%-35s" RESET "\n", 
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "01" RESET "  │  " CL_TEXT "%-35s" RESET "\n", 
                "Khớp gần đúng mặt chữ Kanji");
         
         // Chức năng 02
-        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "02" RESET "  │  🍃  " CL_TEXT "%-35s" RESET "\n", 
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "02" RESET "  │  " CL_TEXT "%-35s" RESET "\n", 
                "Khớp gần đúng cách đọc Hiragana");
         
         // Chức năng 03
-        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "03" RESET "  │  🔤  " CL_TEXT "%-35s" RESET "\n", 
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "03" RESET "  │  " CL_TEXT "%-35s" RESET "\n", 
                "Khớp gần đúng phiên âm Romaji");
         
         // Chức năng 04
-        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "04" RESET "  │  💬  " CL_TEXT "%-35s" RESET "\n", 
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "04" RESET "  │  " CL_TEXT "%-35s" RESET "\n", 
                "Khớp gần đúng nghĩa Tiếng Việt");
 
         // Phân tách hệ thống
         printf("  " CL_PRIMARY "┃ " CL_BORDER "──────────────────────────────────────────────────────────────" RESET "\n");
         
         // Lệnh quay lại
-        printf("  " CL_PRIMARY "┃ " CL_DIM BOLD "00" RESET "  │  ↩️   " CL_DIM "%-35s" RESET "\n", 
+        printf("  " CL_PRIMARY "┃ " CL_DIM BOLD "00" RESET "  │  " CL_DIM "%-35s" RESET "\n", 
                "Quay lại Menu tìm kiếm");
         
         printf("  " CL_PRIMARY "┃" RESET "\n");
@@ -308,7 +307,7 @@ void menuFuzzySearch(KanjiList *L) {
         printf("\n");
         printf("  " BG_HIGHLIGHT BOLD "  KẾT QUẢ TRA CỨU DỮ LIỆU  " RESET);
         printf("  " CL_DIM "Từ khóa:" RESET " \"" CL_LOGO BOLD "%s" RESET "\"\n", keyword);
-        printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n\n");
+        printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
         
         // Gọi bộ xử lý logic tìm kiếm mờ dựa trên khoảng cách chỉnh sửa
         fuzzySearching(L, keyword, option);
@@ -336,21 +335,21 @@ void menuPrefixSearch(TrieNode *trieRoot) {
         printf("  " CL_PRIMARY "┃ " CL_BORDER "──────────────────────────────────────────────────────────────" RESET "\n");
 
         // Chức năng 01
-        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "01" RESET "  │  ⚡  " CL_TEXT "%-35s" RESET "\n", 
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "01" RESET "  │  " CL_TEXT "%-35s" RESET "\n", 
                "Tìm theo Romaji (chữ cái Alphabet)");
 
         // Phân tách hệ thống
         printf("  " CL_PRIMARY "┃ " CL_BORDER "──────────────────────────────────────────────────────────────" RESET "\n");
         
         // Lệnh quay lại
-        printf("  " CL_PRIMARY "┃ " CL_DIM BOLD "00" RESET "  │  ↩️   " CL_DIM "%-35s" RESET "\n", 
+        printf("  " CL_PRIMARY "┃ " CL_DIM BOLD "00" RESET "  │  " CL_DIM "%-35s" RESET "\n", 
                "Quay lại Menu tìm kiếm");
         
         printf("  " CL_PRIMARY "┃" RESET "\n");
         
         // 3. THANH TRẠNG THÁI VÀ DÒNG LỆNH CHỌN CHẾ ĐỘ
         printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
-        printf("  " CL_DIM "Hướng dẫn:" RESET " Chọn số [" CL_PRIMARY "1" RESET "] để kích hoạt bộ lọc " CL_DIM "│" RESET " Chọn [" CL_ERROR "0" RESET "] để quay lại\n");
+        printf("  " CL_DIM "Hướng dẫn:" RESET " Chọn số [" CL_PRIMARY "1" RESET "] để tra cứu " CL_DIM "│" RESET " [" CL_ERROR "0" RESET "] để quay lại\n");
         printf("  " BOLD "Lựa chọn của bạn" RESET " " CL_PRIMARY "» " RESET CL_KEY);
         
         if (scanf("%d", &choice) != 1) {
@@ -381,7 +380,7 @@ void menuPrefixSearch(TrieNode *trieRoot) {
         printf("\n");
         printf("  " BG_HIGHLIGHT BOLD "  KẾT QUẢ TRA CỨU DỮ LIỆU  " RESET);
         printf("  " CL_DIM "Từ khóa:" RESET " \"" CL_LOGO BOLD "%s" RESET "\"\n", keyword);
-        printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n\n");
+        printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
         
         TrieNode *matchNode = searchPrefixNode(trieRoot, keyword);
         if (!matchNode) {

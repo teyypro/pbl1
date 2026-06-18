@@ -104,7 +104,7 @@ void printOutVocab(Vocab *v) {
     }
     
     // Khoảng trắng dòng mờ phân cách giữa các mục từ vựng kết quả
-    printf("  " CL_PRIMARY "┃\n" RESET);
+    printf(RESET "\n");
 }
 
 void exactlySearchingVocab(HashTable *ht, char *key) {

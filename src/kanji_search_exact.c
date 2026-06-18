@@ -130,11 +130,11 @@ void printOutKanji(Kanji *k) {
                     );
                 }
             }
-            printf("\n");
         }
     } else {
         printf("  " CL_PRIMARY "┃ " RESET CL_DIM "(Hiện không có từ vựng đi kèm)\n" RESET);
     }
+    printf("\n");
 }
 
 void exactlySearchingKanji(HashTableK *ht, char *key) {
