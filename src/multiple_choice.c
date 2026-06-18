@@ -214,7 +214,7 @@ void runMultipleChoiceTestKanji(KanjiMCList *list) {
 
             printf("  " CL_PRIMARY "┃ " CL_KANJI BOLD " %s " RESET , questionText);
             printf(CL_TEXT "tương ứng với ? \n" RESET);
-            printf(CL_PRIMARY " ┃ \n");
+            printf("\n");
 
             char *options[4];
             int correctIdx = rand() % 4;
@@ -370,7 +370,7 @@ void runMultipleChoiceTestVocab(VocabMCList *list) {
 
             printf("  " CL_PRIMARY "┃ " CL_KANA BOLD " %s " RESET , questionText);
             printf(CL_TEXT "tương ứng với ? \n " RESET );
-            printf(CL_PRIMARY " ┃ \n");
+            printf("\n");
 
             char *options[4];
             int correctIdx = rand() % 4;
