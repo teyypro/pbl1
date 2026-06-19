@@ -73,48 +73,46 @@ void printFuzzyResult(int gap, Vocab *v, int counter) {
 
 }
 
-void fuzzySearching(KanjiList *L, char *inputUTF8, int option) {
+void fuzzySearching(KanjiList *L, char *inputUTF8) {
     wchar_t *wInput = convertToWchar(inputUTF8);
+    if (wInput == NULL || wcslen(wInput) == 0) {
+        if (wInput) free(wInput);
+        return;
+    }
+
     int foundCount = 0;
     int i, j;
     int gap;
     size_t inputLen = wcslen(wInput);
 
-
-
     for (i = 0; i < L->kanjiCount; i++) {
         for (j = 0; j < L->kanjis[i].vocabsCount; j++) {
             Vocab *v = &L->kanjis[i].vocabs[j];
-            gap = 256;
-            wchar_t *target_w = NULL;
-            
-            switch (option) {
-                case 1: target_w = v->vocab_w; break;
-                case 2: target_w = v->hiragana_w; break;
-                case 3: target_w = v->romaji_w; break;
-                case 4: target_w = v->meaning_w; break;
-            }
+            gap = 256; // Mặc định là không khớp
+
+            wchar_t *target_w = v->romaji_w;
 
             if (target_w != NULL) {
                 size_t targetLen = wcslen(target_w);
+                // Giới hạn chênh lệch độ dài chuỗi để thuật toán Levenshtein chạy chính xác và nhanh hơn
                 if (abs((int)inputLen - (int)targetLen) < 3) {
                     gap = levenshteinDistance(wInput, target_w);
                 }
             }
 
+            // Kiểm tra điều kiện khoảng cách Levenshtein nằm trong phạm vi cho phép
             if (gap <= MAX_GAP) {
                 foundCount++;
                 printFuzzyResult(gap, v, foundCount);
             }
         }
     }
-    
-    
+
     if (foundCount == 0) {
         printf("  " CL_WARN "⚠ Không tìm thấy kết quả nào phù hợp.\n" RESET);
     } else {
         printf("  " CL_SUCCESS "✓ Tìm thấy %d kết quả phù hợp.\n" RESET, foundCount);
     }
-    
+
     free(wInput);
 }
