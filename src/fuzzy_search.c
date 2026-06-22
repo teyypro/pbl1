@@ -81,11 +81,9 @@ void fuzzySearching(KanjiList *L, char *inputUTF8, int option) {
     size_t inputLen = wcslen(wInput);
     // Thay đổi logic kiểm tra gap động
     int current_max_gap = MAX_GAP;
-    if (inputLen <= 2) {
-        current_max_gap = 0; // Từ khóa 1-2 ký tự phải khớp chính xác
-    } else if (inputLen <= 4) {
-        current_max_gap = 1; // Từ khóa 3-4 ký tự cho phép sai 1 lỗi
-    }
+    if (inputLen <= 3) {
+        current_max_gap = 1; // Từ khóa 1-2 ký tự cho phép sai 1 lỗi
+    } 
 
 
 
