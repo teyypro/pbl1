@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 #ifdef _WIN32
     #include <windows.h>
 #endif
@@ -17,13 +18,12 @@ int min3(int a, int b, int c) {
     return m;
 }
 
-// Tính khoảng cách Levenshtein dựa trên đơn vị byte (char)
-int levenshteinDistance(const char *s1, const char *s2) {
-    int len1 = strlen(s1);
-    int len2 = strlen(s2);
+int levenshteinDistance(wchar_t *s1, wchar_t *s2) {
+    int len1 = wcslen(s1);
+    int len2 = wcslen(s2);
     int i, j;
     
-    int **arr = malloc((len1 + 1) * sizeof(int*));
+    int **arr = malloc((len1+1) * sizeof(int*));
     for (i = 0; i <= len1; i++) {
         arr[i] = malloc((len2 + 1) * sizeof(int));
     }
@@ -47,6 +47,8 @@ int levenshteinDistance(const char *s1, const char *s2) {
     return res;
 }
 
+
+
 void printFuzzyResult(int gap, Vocab *v, int counter) {
     if (!v) return;
 
@@ -68,45 +70,57 @@ void printFuzzyResult(int gap, Vocab *v, int counter) {
             v->meaning,
             tagStr
         );
+
 }
 
-void fuzzySearching(KanjiList *L, const char *inputUTF8) {
-    if (inputUTF8 == NULL || strlen(inputUTF8) == 0) {
-        return;
-    }
-
+void fuzzySearching(KanjiList *L, char *inputUTF8, int option) {
+    wchar_t *wInput = convertToWchar(inputUTF8);
     int foundCount = 0;
     int i, j;
     int gap;
-    size_t inputLen = strlen(inputUTF8);
+    size_t inputLen = wcslen(wInput);
+    // Thay đổi logic kiểm tra gap động
+    int current_max_gap = MAX_GAP;
+    if (inputLen <= 2) {
+        current_max_gap = 0; // Từ khóa 1-2 ký tự phải khớp chính xác
+    } else if (inputLen <= 4) {
+        current_max_gap = 1; // Từ khóa 3-4 ký tự cho phép sai 1 lỗi
+    }
+
+
 
     for (i = 0; i < L->kanjiCount; i++) {
         for (j = 0; j < L->kanjis[i].vocabsCount; j++) {
             Vocab *v = &L->kanjis[i].vocabs[j];
-            gap = 256; // Mặc định là không khớp
+            gap = 256;
+            wchar_t *target_w = NULL;
+            
+            switch (option) {
+                case 1: target_w = v->vocab_w; break;
+                case 2: target_w = v->hiragana_w; break;
+                case 3: target_w = v->romaji_w; break;
+            }
 
-            // Thay vì dùng v->romaji_w, sử dụng trực tiếp chuỗi v->romaji (char*)
-            const char *target = v->romaji;
-
-            if (target != NULL) {
-                size_t targetLen = strlen(target);
-                // Giới hạn chênh lệch độ dài chuỗi để thuật toán chạy nhanh hơn
+            if (target_w != NULL) {
+                size_t targetLen = wcslen(target_w);
                 if (abs((int)inputLen - (int)targetLen) < 3) {
-                    gap = levenshteinDistance(inputUTF8, target);
+                    gap = levenshteinDistance(wInput, target_w);
                 }
             }
 
-            // Kiểm tra điều kiện khoảng cách Levenshtein nằm trong phạm vi cho phép
-            if (gap <= MAX_GAP) {
+            if (gap <= current_max_gap) {
                 foundCount++;
                 printFuzzyResult(gap, v, foundCount);
             }
         }
     }
-
+    
+    
     if (foundCount == 0) {
         printf("  " CL_WARN "⚠ Không tìm thấy kết quả nào phù hợp.\n" RESET);
     } else {
         printf("  " CL_SUCCESS "✓ Tìm thấy %d kết quả phù hợp.\n" RESET, foundCount);
     }
+    
+    free(wInput);
 }
