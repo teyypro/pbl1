@@ -248,9 +248,18 @@ void menuFuzzySearch(KanjiList *L) {
         printf("  " CL_PRIMARY "┃ " CL_DIM "%-6s" CL_HEADER BOLD "%-35s" RESET "\n", "STT", "DẠNG TỪ KHÓA");
         printf("  " CL_PRIMARY "┃ " CL_BORDER "──────────────────────────────────────────────────────────────" RESET "\n");
 
+        // Chức năng 01
         printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "01" RESET "  │  " CL_TEXT "%-35s" RESET "\n", 
-               "Khớp gần đúng mặt chữ Romaji");
-
+               "Khớp gần đúng mặt chữ Kanji");
+        
+        // Chức năng 02
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "02" RESET "  │  " CL_TEXT "%-35s" RESET "\n", 
+               "Khớp gần đúng cách đọc Furigana");
+        
+        // Chức năng 03
+        printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "03" RESET "  │  " CL_TEXT "%-35s" RESET "\n", 
+               "Khớp gần đúng phiên âm Romaji");
+        
 
         // Phân tách hệ thống
         printf("  " CL_PRIMARY "┃ " CL_BORDER "──────────────────────────────────────────────────────────────" RESET "\n");
@@ -263,7 +272,7 @@ void menuFuzzySearch(KanjiList *L) {
         
         // 3. THANH TRẠNG THÁI VÀ DÒNG LỆNH CHỌN CHẾ ĐỘ
         printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
-        printf("  " CL_DIM "Hướng dẫn:" RESET " Chọn số [" CL_PRIMARY "1" RESET "] để xác định chế độ " CL_DIM "│" RESET " Chọn [" CL_ERROR "0" RESET "] để quay lại\n");
+        printf("  " CL_DIM "Hướng dẫn:" RESET " Chọn số [" CL_PRIMARY "1-3" RESET "] để xác định chế độ " CL_DIM "│" RESET " Chọn [" CL_ERROR "0" RESET "] để quay lại\n");
         printf("  " BOLD "Lựa chọn của bạn" RESET " " CL_PRIMARY "» " RESET CL_KEY);
         
         if (scanf("%d", &option) != 1) { 
@@ -274,7 +283,7 @@ void menuFuzzySearch(KanjiList *L) {
         printf(RESET);
         
         if (option == 0) break;
-        if (option < 1) {
+        if (option < 1 || option > 3) {
             printf("\n  " CL_ERROR "🚨 [LỖI]: Chế độ chọn không hợp lệ. Vui lòng thử lại!" RESET "\n");
             printf("\n  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
             printf("  " CL_DIM "➔ Nhấn " CL_PRIMARY "Enter" CL_DIM " để tiếp tục..." RESET);
@@ -295,7 +304,7 @@ void menuFuzzySearch(KanjiList *L) {
         printf("\n");
         printf("  " BG_HIGHLIGHT BOLD "  KẾT QUẢ TRA CỨU DỮ LIỆU  " RESET);
         printf("  " CL_DIM "Từ khóa:" RESET " \"" CL_LOGO BOLD "%s" RESET "\"\n", keyword);
-        printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
+        printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n\n");
         
         // Gọi bộ xử lý logic tìm kiếm mờ dựa trên khoảng cách chỉnh sửa
         fuzzySearching(L, keyword, option);
