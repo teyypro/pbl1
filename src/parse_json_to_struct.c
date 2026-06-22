@@ -96,6 +96,7 @@ Vocab* parseVocabs(cJSON *vocabsArr, int *count) {
         v->vocab_w   = convertToWchar(v->vocab);
         v->hiragana_w = convertToWchar(v->hiragana);
         v->romaji_w   = convertToWchar(v->romaji);
+        v->meaning_w  = convertToWchar(v->meaning);
 
         v->samples = parseSamples(cJSON_GetObjectItem(item, "samples"), &v->samplesCount);
     }

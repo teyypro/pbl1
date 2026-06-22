@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <wchar.h>
 #ifdef _WIN32
     #include <windows.h>
 #endif
@@ -18,12 +17,13 @@ int min3(int a, int b, int c) {
     return m;
 }
 
-int levenshteinDistance(wchar_t *s1, wchar_t *s2) {
-    int len1 = wcslen(s1);
-    int len2 = wcslen(s2);
+// Tính khoảng cách Levenshtein dựa trên đơn vị byte (char)
+int levenshteinDistance(const char *s1, const char *s2) {
+    int len1 = strlen(s1);
+    int len2 = strlen(s2);
     int i, j;
     
-    int **arr = malloc((len1+1) * sizeof(int*));
+    int **arr = malloc((len1 + 1) * sizeof(int*));
     for (i = 0; i <= len1; i++) {
         arr[i] = malloc((len2 + 1) * sizeof(int));
     }
@@ -47,8 +47,6 @@ int levenshteinDistance(wchar_t *s1, wchar_t *s2) {
     return res;
 }
 
-
-
 void printFuzzyResult(int gap, Vocab *v, int counter) {
     if (!v) return;
 
@@ -70,33 +68,31 @@ void printFuzzyResult(int gap, Vocab *v, int counter) {
             v->meaning,
             tagStr
         );
-
 }
 
-void fuzzySearching(KanjiList *L, char *inputUTF8) {
-    wchar_t *wInput = convertToWchar(inputUTF8);
-    if (wInput == NULL || wcslen(wInput) == 0) {
-        if (wInput) free(wInput);
+void fuzzySearching(KanjiList *L, const char *inputUTF8) {
+    if (inputUTF8 == NULL || strlen(inputUTF8) == 0) {
         return;
     }
 
     int foundCount = 0;
     int i, j;
     int gap;
-    size_t inputLen = wcslen(wInput);
+    size_t inputLen = strlen(inputUTF8);
 
     for (i = 0; i < L->kanjiCount; i++) {
         for (j = 0; j < L->kanjis[i].vocabsCount; j++) {
             Vocab *v = &L->kanjis[i].vocabs[j];
             gap = 256; // Mặc định là không khớp
 
-            wchar_t *target_w = v->romaji_w;
+            // Thay vì dùng v->romaji_w, sử dụng trực tiếp chuỗi v->romaji (char*)
+            const char *target = v->romaji;
 
-            if (target_w != NULL) {
-                size_t targetLen = wcslen(target_w);
-                // Giới hạn chênh lệch độ dài chuỗi để thuật toán Levenshtein chạy chính xác và nhanh hơn
+            if (target != NULL) {
+                size_t targetLen = strlen(target);
+                // Giới hạn chênh lệch độ dài chuỗi để thuật toán chạy nhanh hơn
                 if (abs((int)inputLen - (int)targetLen) < 3) {
-                    gap = levenshteinDistance(wInput, target_w);
+                    gap = levenshteinDistance(inputUTF8, target);
                 }
             }
 
@@ -113,6 +109,4 @@ void fuzzySearching(KanjiList *L, char *inputUTF8) {
     } else {
         printf("  " CL_SUCCESS "✓ Tìm thấy %d kết quả phù hợp.\n" RESET, foundCount);
     }
-
-    free(wInput);
 }

@@ -71,7 +71,7 @@ void menuExactSearch(HashTable *vocabHT, HashTableK *kanjiHT) {
     char keyword[256];
     while (1) {
         // Xóa màn hình và đưa con trỏ về góc trên bên trái
-        printf("\x1b[2J\x1b[H");
+        clearScreen();
         
         // 1. THANH DIỀU HƯỚNG SUB-HEADER
         printf("\n");
@@ -153,7 +153,7 @@ void menuKMPSearch(KanjiList *L) {
     char keyword[256];
     while (1) {
         // Xóa màn hình và đưa con trỏ về góc trên bên trái
-        printf("\x1b[2J\x1b[H");
+        clearScreen();
         
         // 1. THANH DIỀU HƯỚNG SUB-HEADER
         printf("\n");
@@ -238,7 +238,7 @@ void menuFuzzySearch(KanjiList *L) {
     char keyword[256];
     while (1) {
         // Xóa màn hình và đưa con trỏ về góc trên bên trái
-        printf("\x1b[2J\x1b[H");
+        clearScreen();
         
         // 1. THANH DIỀU HƯỚNG SUB-HEADER
         printf("\n");
@@ -312,7 +312,7 @@ void menuPrefixSearch(TrieNode *trieRoot) {
     int choice;
     while (1) {
         // Xóa màn hình và đưa con trỏ về góc trên bên trái
-        printf("\x1b[2J\x1b[H");
+        clearScreen();
         
         // 1. THANH DIỀU HƯỚNG SUB-HEADER
         printf("\n");
