@@ -7,7 +7,6 @@ gcc main.c ^
     src/fuzzy_search.c ^
     src/substring_search.c ^
     src/lessons_management.c ^
-    src/multiple_choice.c ^
     src/filter_learned_lesson.c ^
     src/sentence_analysis.c ^
     src/prefix_search.c ^

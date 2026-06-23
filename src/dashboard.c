@@ -10,7 +10,6 @@
 #include "fuzzy_search.h"
 #include "substring_search.h"
 #include "prefix_search.h"
-#include "multiple_choice.h"
 #include "lessons_management.h"
 #include "filter_learned_lesson.h"
 #include "sentence_analysis.h"
@@ -47,9 +46,6 @@ void displayMenu(void) {
     printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "04" RESET "  │  🧠  " CL_TEXT "%-35s" RESET "\n", 
            "Phân tích Hán tự trong câu");
     
-    // Chức năng 05
-    printf("  " CL_PRIMARY "┃ " CL_KEY BOLD "05" RESET "  │  📝  " CL_TEXT "%-35s" RESET "\n", 
-           "Luyện tập trắc nghiệm");
 
     // Phân tách hệ thống
     printf("  " CL_PRIMARY "┃ " CL_BORDER "────────────────────────────────────────────────────────────────" RESET "\n");
@@ -62,7 +58,7 @@ void displayMenu(void) {
 
     // 3. THANH TRẠNG THÁI VÀ KHU VỰC NHẬP LỆNH (COMMAND PROMPT)
     printf("  " CL_BORDER "──────────────────────────────────────────────────────────────────" RESET "\n");
-    printf("  " CL_DIM "Hướng dẫn:" RESET " Chọn chức năng số [" CL_PRIMARY "1-5" RESET "] " CL_DIM "│" RESET " [" CL_ERROR "0" RESET "] để thoát\n");
+    printf("  " CL_DIM "Hướng dẫn:" RESET " Chọn chức năng số [" CL_PRIMARY "1-4" RESET "] " CL_DIM "│" RESET " [" CL_ERROR "0" RESET "] để thoát\n");
     printf("  " BOLD "Lựa chọn của bạn" RESET " " CL_PRIMARY "» " RESET);
 }
 
@@ -488,9 +484,6 @@ void caseNo4(KanjiList *L) {
     analyzeJapaneseSentence(L);
 }
 
-void caseNo5(KanjiList *L) {
-    runChoiceOption(L);
-}
 
 void handleMenuSelection(char *rawJson) {
     int choice;
@@ -517,7 +510,6 @@ void handleMenuSelection(char *rawJson) {
             case 2: caseNo2(&myData); break;
             case 3: caseNo3(&myData); break;
             case 4: caseNo4(&myData); break;
-            case 5: caseNo5(&myData); break;
             case 0:
                 printf("Dang thoat chuong trinh...\n");
                 freeTrie(trieRoot);

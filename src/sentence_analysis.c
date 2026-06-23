@@ -13,6 +13,7 @@
 #include "utils.h"
 
 #define MAX_SENTENCE 1024
+#define HASH_SIZE 512
 
 typedef struct KanjiNode {
     Kanji* kanjiData;
@@ -24,8 +25,12 @@ typedef struct {
 } KanjiHashTable;
 
 unsigned int hashKanjiChar(wchar_t wc) {
-    return ((unsigned int)wc * 37) % 512;
+    unsigned long hash = 5381;
+    // djb2: hash = ((hash << 5) + hash) + c;
+    hash = ((hash << 5) + hash) + (unsigned long)wc;
+    return hash % HASH_SIZE; // vẫn giữ kích thước bảng băm là 512
 }
+
 
 KanjiHashTable* createKanjiHashTable(KanjiList *allData) {
     KanjiHashTable* table = (KanjiHashTable*)calloc(1, sizeof(KanjiHashTable));
