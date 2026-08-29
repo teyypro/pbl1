@@ -1,4 +1,4 @@
-# TEYYPRO-PBL1 - Japanese Kanji Learning System
+# PBL1 - Japanese Kanji Learning System
 
 ## 📚 Overview
 
